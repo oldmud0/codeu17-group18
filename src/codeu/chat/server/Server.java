@@ -32,6 +32,7 @@ import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
+import codeu.chat.common.ServerInfo;
 import codeu.chat.common.User;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
@@ -63,6 +64,8 @@ public final class Server {
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
+  
+  private static final ServerInfo info = new ServerInfo();
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 
@@ -170,6 +173,14 @@ public final class Server {
         Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_ID_RESPONSE);
         Serializers.collection(Message.SERIALIZER).write(out, messages);
       }
+    });
+    
+    this.commands.put(NetworkCode.SERVER_INFO_REQUEST, new Command(){
+    	@Override
+    	public void onMessage(InputStream in, OutputStream out) throws IOException{
+    		Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
+    		Uuid.SERIALIZER.write(out, info.getVersion());
+    	}
     });
 
     this.timeline.scheduleNow(new Runnable() {

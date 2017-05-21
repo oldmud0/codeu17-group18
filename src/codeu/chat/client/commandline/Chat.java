@@ -107,6 +107,8 @@ public final class Chat {
         System.out.println("    Add a new user with the given name.");
         System.out.println("  u-sign-in <name>");
         System.out.println("    Sign in as the user with the given name.");
+        System.out.println("  server");
+        System.out.println("	Print server version");
         System.out.println("  exit");
         System.out.println("    Exit the program.");
       }

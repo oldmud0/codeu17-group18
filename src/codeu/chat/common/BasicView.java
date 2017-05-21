@@ -32,24 +32,29 @@ import codeu.chat.util.Uuid;
 
 public interface BasicView {
 
-  // GET USERS
-  //
-  //   Return all users whose id is found in the given collection.
-  Collection<User> getUsers();
+	// GET USERS
+	//
+	//   Return all users whose id is found in the given collection.
+	Collection<User> getUsers();
 
-  // GET ALL CONVERSATIONS
-  //
-  //   Return a summary of each converation.
-  Collection<ConversationHeader> getConversations();
+	// GET ALL CONVERSATIONS
+	//
+	//   Return a summary of each converation.
+	Collection<ConversationHeader> getConversations();
 
-  // GET CONVERSATIONS
-  //
-  //   Return all conversations whose id is found in the given collection.
-  Collection<ConversationPayload> getConversationPayloads(Collection<Uuid> ids);
+	// GET CONVERSATIONS
+	//
+	//   Return all conversations whose id is found in the given collection.
+	Collection<ConversationPayload> getConversationPayloads(Collection<Uuid> ids);
 
-  // GET MESSAGES
-  //
-  //   Return all messages whose id is found in the given collection.
-  Collection<Message> getMessages(Collection<Uuid> ids);
+	// GET MESSAGES
+	//
+	//   Return all messages whose id is found in the given collection.
+	Collection<Message> getMessages(Collection<Uuid> ids);
+	
+	//GET SERVER INFO
+	//
+	//	Return server info
+	ServerInfo getInfo();
 
 }
