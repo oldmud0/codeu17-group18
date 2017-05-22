@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -71,25 +71,31 @@ public final class View implements BasicView, SinglesView {
   }
 
   @Override
-  public User findUser(Uuid id) { return model.userById().first(id); }
-
-  @Override
-  public ConversationHeader findConversation(Uuid id) { return model.conversationById().first(id); }
-
-  @Override
-  public Message findMessage(Uuid id) { return model.messageById().first(id); }
-  
-  @Override
-  public ServerInfo getInfo(){
-	  return new ServerInfo();
+  public User findUser(Uuid id) {
+    return model.userById().first(id);
   }
 
-  private static <S,T> Collection<T> all(StoreAccessor<S,T> store) {
+  @Override
+  public ConversationHeader findConversation(Uuid id) {
+    return model.conversationById().first(id);
+  }
+
+  @Override
+  public Message findMessage(Uuid id) {
+    return model.messageById().first(id);
+  }
+
+  @Override
+  public ServerInfo getInfo() {
+    return new ServerInfo();
+  }
+
+  private static <S, T> Collection<T> all(StoreAccessor<S, T> store) {
 
     final Collection<T> all = new ArrayList<>();
 
     for (final T value : store.all()) {
-        all.add(value);
+      all.add(value);
     }
 
     return all;
