@@ -23,6 +23,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.User;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -135,5 +136,24 @@ final class View implements BasicView {
     }
 
     return messages;
+  }
+
+  @Override
+  public VersionInfo getVersion() {
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.GET_SERVER_VERSION_REQUEST);
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_SERVER_VERSION_RESPONSE) {
+        return new VersionInfo(Uuid.SERIALIZER.read(connection.in()));
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      // TODO: switch to system.err
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+    return null;
   }
 }

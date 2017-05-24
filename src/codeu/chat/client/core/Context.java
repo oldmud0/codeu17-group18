@@ -14,13 +14,12 @@
 
 package codeu.chat.client.core;
 
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 
 import codeu.chat.common.BasicView;
 import codeu.chat.common.User;
-import codeu.chat.util.Uuid;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.util.connections.ConnectionSource;
 
 public final class Context {
@@ -46,5 +45,9 @@ public final class Context {
       users.add(new UserContext(user, view, controller));
     }
     return users;
+  }
+  
+  public VersionInfo getVersion() {
+    return view.getVersion();
   }
 }
