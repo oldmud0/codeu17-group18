@@ -72,7 +72,7 @@ public final class Server {
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
-
+  
   private final VersionInfo version = new VersionInfo();
   private static final ServerInfo info = new ServerInfo();
 
@@ -192,6 +192,14 @@ public final class Server {
 
         Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_ID_RESPONSE);
         Serializers.collection(Message.SERIALIZER).write(out, messages);
+      }
+    });
+    
+    this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
+        Uuid.SERIALIZER.write(out, version.getVersion());
       }
     });
 

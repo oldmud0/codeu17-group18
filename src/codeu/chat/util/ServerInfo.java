@@ -9,8 +9,6 @@ public final class ServerInfo {
 		this.startTime = startTime;
 	}
 	public String toString(){
-		String out = "";
-		out = startTime.toString();
-		return out;
+		return startTime.toString();
 	}
 }

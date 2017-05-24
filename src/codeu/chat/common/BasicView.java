@@ -55,9 +55,9 @@ public interface BasicView {
 
   // GET VERSION
   //
-  //   Return the server's version.
   //   Return the server's version, or a null UUID if unavailable.
   VersionInfo getVersion();
+
   ServerInfo getInfo();
 
   String getAllConvosFromServer(Uuid signedInId);

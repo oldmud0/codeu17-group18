@@ -9,7 +9,6 @@ import codeu.chat.util.Uuid;
 /**
  * Holds the current version of the CodeU chat server.
  * 
- * For clients, this can be used to determine whether or not the server version
  * <p>For clients, this can be used to determine whether or not the server version
  * matches that of the client. For servers, this is used to advertise the
  * version of the server.
@@ -21,16 +20,14 @@ public class VersionInfo {
 
   /**
    * Creates a new VersionInfo object with the current supported version.
-   */
-  public VersionInfo(){
-    this(getCurrentVersionUuid());
-  }
-  /**
-   * Creates a new VersionInfo object with the current supported version.
    * 
    * <p>If the current version string cannot be parsed into a UUID, the version
    * will be a null UUID.
    */
+  public VersionInfo() {
+    this(getCurrentVersionUuid());
+  }
+
 
   /**
    * Creates a new VersionInfo object with any specific version.
@@ -45,15 +42,11 @@ public class VersionInfo {
   public Uuid getVersion() {
     return version;
   }
-  
-  public String toString(){
-    String out = "";
-    out = version.toString();
-    return out;
-  }
-  //Retrieves the stored UUID form of the version.
 
-  
+  public String toString(){
+    return version.toString();
+  }
+
   private static final Uuid getCurrentVersionUuid() {
     try {
       return Uuid.parse(CURRENT_VERSION);

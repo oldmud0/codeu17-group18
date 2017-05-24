@@ -3,3 +3,5 @@ bin/
 .project
 storage_test/
 *.lck
+.classpath
+.settings/

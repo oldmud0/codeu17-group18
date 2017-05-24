@@ -200,6 +200,22 @@ public final class Chat{
       }
     });
 
+    // VERSION (server version)
+    //
+    // Print the server's version.
+    //
+    panel.register("version", new Panel.Command() {
+      @Override
+      public void invoke(Scanner args) {
+          final VersionInfo version = context.getVersion();
+          if (version == null) {
+            System.out.println("ERROR: No version returned");
+          } else {
+            System.out.format("Server version: %s\n", version);
+          }
+      }
+    });
+
 
     // VERSION (server version)
     //
