@@ -159,6 +159,23 @@ final class View implements BasicView {
   }
 
   @Override
+  public ServerInfo getInfo() {
+    try (final Connection connection = source.connection()) {
+      Serializers.INTEGER.write(connection.out(), NetworkCode.SERVER_INFO_REQUEST);
+      if(Serializers.INTEGER.read(connection.in()) == NetworkCode.SERVER_INFO_RESPONSE) {
+        final Time startTime = Time.SERIALIZER.read(connection.in());
+        return new ServerInfo(startTime);
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. CHeck log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+    return null;
+    }
+  }
+
   public VersionInfo getVersion() {
     try (final Connection connection = source.connect()) {
 

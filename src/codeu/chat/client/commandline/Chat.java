@@ -216,6 +216,18 @@ public final class Chat{
       }
     });
 
+    panel.register("info", new Panel.Command() {
+      @Override
+      public void invoke(Scanner args) {
+        final ServerInfo info = context.getInfo();
+        if(info == null) {
+          System.out.println("ERROR: No info returned");
+        } else {
+          System.out.print("Server info: %s\n", info);
+        }
+      }
+    });
+
 
     // VERSION (server version)
     //

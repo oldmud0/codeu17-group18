@@ -53,8 +53,8 @@ public final class Context {
     return view.getVersion();
   }
 
-  public VersionInfo getVersion() {
-    return view.getVersion();
+  public ServerInfo getInfo() {
+    return view.getInfo();
   }
 
   public ServerInfo getInfo() {

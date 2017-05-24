@@ -396,7 +396,11 @@ public final class Server {
             command.onMessage(connection.in(), connection.out());
             LOG.info("Connection accepted");
           }
-        } catch (Exception ex) {
+          if (type == NetworkCode.SERVER_INFO_REQUEST) {
+              Seralizers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
+              Uuid.SERIALIZER.write(out, info.version);
+          } 
+        catch (Exception ex) {
 
           LOG.error(ex, "Exception while handling connection.");
 
