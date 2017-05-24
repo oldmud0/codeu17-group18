@@ -50,4 +50,8 @@ public final class Context {
   public VersionInfo getVersion() {
     return view.getVersion();
   }
+
+  public Info getInfo() {
+    return view.getInfo();
+  }
 }
