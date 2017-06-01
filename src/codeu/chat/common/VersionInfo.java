@@ -9,7 +9,7 @@ import codeu.chat.util.Uuid;
 /**
  * Holds the current version of the CodeU chat server.
  * 
- * For clients, this can be used to determine whether or not the server version
+ * <p>For clients, this can be used to determine whether or not the server version
  * matches that of the client. For servers, this is used to advertise the
  * version of the server.
  */
