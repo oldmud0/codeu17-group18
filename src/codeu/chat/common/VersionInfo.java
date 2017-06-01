@@ -16,18 +16,13 @@ import codeu.chat.util.Uuid;
 public class VersionInfo {
   private static final String CURRENT_VERSION = "1.0.0";
 
-  private Uuid version;
+  private final Uuid version;
 
   /**
    * Creates a new VersionInfo object with the current supported version.
    */
   public VersionInfo() {
-    try {
-      this.version = Uuid.parse(CURRENT_VERSION);
-    } catch (IOException e) {
-      this.version = null;
-      Logger.getGlobal().log(Level.WARNING, "The current version could not be parsed into a UUID.", e);
-    }
+    this(getCurrentVersionUuid());
   }
 
   /**
@@ -42,5 +37,14 @@ public class VersionInfo {
 
   public Uuid getVersion() {
     return version;
+  }
+  
+  private static final Uuid getCurrentVersionUuid() {
+    try {
+      return Uuid.parse(CURRENT_VERSION);
+    } catch (IOException e) {
+      Logger.getGlobal().log(Level.WARNING, "The current version could not be parsed into a UUID.", e);
+      return null;
+    }
   }
 }
