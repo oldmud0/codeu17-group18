@@ -20,6 +20,9 @@ public class VersionInfo {
 
   /**
    * Creates a new VersionInfo object with the current supported version.
+   * 
+   * <p>If the current version string cannot be parsed into a UUID, the version
+   * will be null.
    */
   public VersionInfo() {
     this(getCurrentVersionUuid());
