@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import codeu.chat.common.BasicView;
+import codeu.chat.common.ServerInfo;
 import codeu.chat.common.User;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.ConnectionSource;
@@ -35,9 +36,7 @@ public final class Context {
 
   public UserContext create(String name) {
     final User user = controller.newUser(name);
-    return user == null ?
-        null :
-        new UserContext(user, view, controller);
+    return user == null ? null : new UserContext(user, view, controller);
   }
 
   public Iterable<UserContext> allUsers() {
@@ -46,5 +45,9 @@ public final class Context {
       users.add(new UserContext(user, view, controller));
     }
     return users;
+  }
+
+  public ServerInfo getInfo() {
+    return view.getInfo();
   }
 }
