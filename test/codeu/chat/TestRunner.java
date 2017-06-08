@@ -13,6 +13,7 @@
 // limitations under the License.
 
 package codeu.chat;
+package codeu.chat.util.TokenizerTest.class;
 
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
