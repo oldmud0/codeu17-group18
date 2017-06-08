@@ -7,7 +7,8 @@ public final class Tokenizer {
 	private int at;
 
 	public Tokenizer(String source) {
-
+		this.source = source;
+		at = 0;
 	}
 	public String next() throws IOException{
 		while (remaining() > 0 && Character.isWhitespace(peek())) {
