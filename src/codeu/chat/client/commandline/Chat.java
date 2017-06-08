@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -107,6 +107,8 @@ public final class Chat {
         System.out.println("    Add a new user with the given name.");
         System.out.println("  u-sign-in <name>");
         System.out.println("    Sign in as the user with the given name.");
+        System.out.println("  server");
+        System.out.println("	Print server version");
         System.out.println("  exit");
         System.out.println("    Exit the program.");
       }
@@ -121,10 +123,7 @@ public final class Chat {
       @Override
       public void invoke(Scanner args) {
         for (final UserContext user : context.allUsers()) {
-          System.out.format(
-              "USER %s (UUID:%s)\n",
-              user.user.name,
-              user.user.id);
+          System.out.format("USER %s (UUID:%s)\n", user.user.name, user.user.id);
         }
       }
     });
@@ -202,7 +201,8 @@ public final class Chat {
         System.out.println("  c-list");
         System.out.println("    List all conversations that the current user can interact with.");
         System.out.println("  c-add <title>");
-        System.out.println("    Add a new conversation with the given title and join it as the current user.");
+        System.out.println(
+            "    Add a new conversation with the given title and join it as the current user.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
         System.out.println("  info");
@@ -223,9 +223,7 @@ public final class Chat {
       @Override
       public void invoke(Scanner args) {
         for (final ConversationContext conversation : user.conversations()) {
-          System.out.format(
-              "CONVERSATION %s (UUID:%s)\n",
-              conversation.conversation.title,
+          System.out.format("CONVERSATION %s (UUID:%s)\n", conversation.conversation.title,
               conversation.conversation.id);
         }
       }
@@ -321,7 +319,8 @@ public final class Chat {
         System.out.println("  m-list");
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
-        System.out.println("    Add a new message to the current conversation as the current user.");
+        System.out
+            .println("    Add a new message to the current conversation as the current user.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
         System.out.println("  back");
@@ -340,9 +339,8 @@ public final class Chat {
       @Override
       public void invoke(Scanner args) {
         System.out.println("--- start of conversation ---");
-        for (MessageContext message = conversation.firstMessage();
-                            message != null;
-                            message = message.next()) {
+        for (MessageContext message = conversation.firstMessage(); message != null; message =
+            message.next()) {
           System.out.println();
           System.out.format("USER : %s\n", message.message.author);
           System.out.format("SENT : %s\n", message.message.creation);
