@@ -65,7 +65,7 @@ public final class Server {
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
 
-  private static final ServerInfo info = new ServerInfo();
+  private static final ServerInfo INFO = new ServerInfo();
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 
@@ -176,7 +176,7 @@ public final class Server {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
-        Uuid.SERIALIZER.write(out, info.getVersion());
+        Uuid.SERIALIZER.write(out, INFO.getVersion());
       }
     });
 

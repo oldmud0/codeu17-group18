@@ -13,12 +13,7 @@ public class ServerInfo {
   private Uuid version;
 
   public ServerInfo() {
-    try {
-      this.version = Uuid.parse(SERVER_VERSION);
-    } catch (IOException e) {
-      this.version = null;
-      Logger.getGlobal().log(Level.WARNING, "Uuid could not be parsed");
-    }
+    this(getCurrentUuid());
   }
 
   public ServerInfo(Uuid version) {
@@ -28,5 +23,13 @@ public class ServerInfo {
   public Uuid getVersion() {
     return version;
   }
-
+  
+  private static Uuid getCurrentUuid(){
+    try{
+      return Uuid.parse(SERVER_VERSION);
+    }catch(IOException e){
+      Logger.getGlobal().log(Level.WARNING, "Uuid could not be parsed");
+      return null;
+    }
+  }
 }

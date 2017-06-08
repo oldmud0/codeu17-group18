@@ -143,7 +143,7 @@ final class View implements BasicView {
 
   @Override
   public ServerInfo getInfo() {
-    try (final Connection connection = this.source.connect()) {
+    try (final Connection connection = source.connect()) {
       Serializers.INTEGER.write(connection.out(), NetworkCode.SERVER_INFO_REQUEST);
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.SERVER_INFO_RESPONSE) {
         final Uuid version = Uuid.SERIALIZER.read(connection.in());

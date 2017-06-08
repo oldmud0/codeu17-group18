@@ -54,7 +54,7 @@ public interface BasicView {
 
   // GET SERVER INFO
   //
-  // Return server info
+  // Return server info, can return null in case of error
   ServerInfo getInfo();
 
 }
