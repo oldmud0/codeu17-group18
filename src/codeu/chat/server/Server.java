@@ -172,7 +172,7 @@ public final class Server {
       }
     });
 
-    //this.timeline.scheduleNow(new Runnable() {
+    this.timeline.scheduleNow(new Runnable() {
       @Override
       public void run() {
         try {
@@ -205,7 +205,6 @@ public final class Server {
 
           final int type = Serializers.INTEGER.read(connection.in());
           final Command command = commands.get(type);
-
           if (command == null) {
             // The message type cannot be handled so return a dummy message.
             Serializers.INTEGER.write(connection.out(), NetworkCode.NO_MESSAGE);

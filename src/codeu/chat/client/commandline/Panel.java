@@ -17,6 +17,7 @@ package codeu.chat.client.commandline;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.*;
 
 // PANEL
 //
@@ -27,7 +28,7 @@ import java.util.Scanner;
 final class Panel {
 
   public interface Command {
-    void invoke(Scanner line);
+    void invoke(List<String> args);
   }
 
   private final Map<String, Command> commands = new HashMap<>();

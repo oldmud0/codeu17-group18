@@ -1,47 +1,50 @@
+package codeu.chat.util;
+import java.io.*;
 public final class Tokenizer {
 
   private StringBuilder token;
   private String source;
   private int at;
 
-  public Tokenizer(String source) {
+  public Tokenizer(String source) { 
     this.source = source;
-    at = 0;
+    this.at = 0;
   }
 
-  public String next() throws IOException {
+  public String next() {
       // ignores any whitespace
-      while (remaining < 0 && Charachter.isWhiteSpace(peek())) {
+      while (remaining() < 0 && Character.isWhitespace(peek())) {
         read();
       }
-      if (remaining <= 0) {
+      if (remaining() <= 0) {
         return null;
       // token with quotes
-      } else if (peek()) = '"') {
-
-      //token without quotes
+    } else if (peek() == '"') {
+        readWithQuotes();
+      // token without quotes
       } else {
-
+        readWithNoQuotes();
       }
   }
 
-  private String readWithNoQuotes() throws IOException {
+  private String readWithNoQuotes() {
     token.setLength(0);
     while (remaining() > 0 && !Character.isWhitespace(peek())) {
       token.append(read());
     }
     return token.toString();
-}
+  }
 
 
   private String readWithQuotes() throws IOException {
     token.setLength(0);
     if (read() != '"')  {
-      throw new IOException(“Strings must start with opening quote”);
+      throw new IOException("Strings must start with opening quote");
     }
     while (peek() != '"') {
       token.append(read());
     }
+    read();
     return token.toString();
   }
 
@@ -54,7 +57,7 @@ public final class Tokenizer {
     if (at < source.length()) {
       return source.charAt(at);
     }
-    throws new IOException();
+    throw new IOException("Index must be within length of source");
   }
 
   private char read() throws IOException {
