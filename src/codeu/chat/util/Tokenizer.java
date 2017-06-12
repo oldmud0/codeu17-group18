@@ -1,33 +1,35 @@
 package codeu.chat.util;
+
 import java.io.*;
+import java.io.IOException;
+import java.lang.*;
+
 public final class Tokenizer {
 
   private StringBuilder token;
   private String source;
   private int at;
 
-  public Tokenizer(String source) { 
+  public Tokenizer(String source) {
+    this.token = new StringBuilder();
     this.source = source;
     this.at = 0;
   }
 
-  public String next() {
-      // ignores any whitespace
-      while (remaining() < 0 && Character.isWhitespace(peek())) {
-        read();
-      }
-      if (remaining() <= 0) {
-        return null;
-      // token with quotes
+  public String next() throws IOException {
+    while (remaining() > 0 && Character.isWhitespace(peek())) {
+      read();
+    }
+    if (remaining() <= 0) {
+      return null;
     } else if (peek() == '"') {
-        readWithQuotes();
-      // token without quotes
-      } else {
-        readWithNoQuotes();
-      }
+      return readWithQuotes();
+    } else {
+      return readWithNoQuotes();
+    }
   }
 
-  private String readWithNoQuotes() {
+  private String readWithNoQuotes() throws IOException{
     token.setLength(0);
     while (remaining() > 0 && !Character.isWhitespace(peek())) {
       token.append(read());
@@ -38,7 +40,7 @@ public final class Tokenizer {
 
   private String readWithQuotes() throws IOException {
     token.setLength(0);
-    if (read() != '"')  {
+    if (read() != '"') {
       throw new IOException("Strings must start with opening quote");
     }
     while (peek() != '"') {
@@ -49,20 +51,20 @@ public final class Tokenizer {
   }
 
   private int remaining() {
-    return source.length() - at;
-
+    return this.source.length() - this.at;
   }
 
-  private char peek() throws IOException {
-    if (at < source.length()) {
-      return source.charAt(at);
-    }
-    throw new IOException("Index must be within length of source");
+  private char peek() throws IOException{
+      if (this.at < source.length()) {
+        return source.charAt(this.at);
+      } else {
+        throw new IOException("Index must be less than length");
+     }
   }
 
-  private char read() throws IOException {
+  private char read() throws IOException{
     final char c = peek();
-    at++;
+    this.at = this.at + 1;
     return c;
   }
 }
