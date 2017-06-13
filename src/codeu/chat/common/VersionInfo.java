@@ -22,7 +22,7 @@ public class VersionInfo {
    * Creates a new VersionInfo object with the current supported version.
    * 
    * <p>If the current version string cannot be parsed into a UUID, the version
-   * will be null.
+   * will be a null UUID.
    */
   public VersionInfo() {
     this(getCurrentVersionUuid());
@@ -38,6 +38,9 @@ public class VersionInfo {
     this.version = version;
   }
 
+  /**
+   * Retrieves the stored UUID form of the version.
+   */
   public Uuid getVersion() {
     return version;
   }
@@ -47,7 +50,7 @@ public class VersionInfo {
       return Uuid.parse(CURRENT_VERSION);
     } catch (IOException e) {
       Logger.getGlobal().log(Level.WARNING, "The current version could not be parsed into a UUID.", e);
-      return null;
+      return Uuid.NULL;
     }
   }
 }

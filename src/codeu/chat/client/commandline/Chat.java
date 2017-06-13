@@ -24,6 +24,7 @@ import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.Uuid;
 
 public final class Chat {
 
@@ -192,7 +193,7 @@ public final class Chat {
       @Override
       public void invoke(Scanner args) {
           final VersionInfo version = context.getVersion();
-          if (version == null) {
+          if (version.getVersion().equals(Uuid.NULL)) {
             System.out.println("ERROR: No version returned");
           } else {
             System.out.format("Server version: %s\n", version);
