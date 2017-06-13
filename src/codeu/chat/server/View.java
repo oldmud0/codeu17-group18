@@ -49,7 +49,6 @@ public final class View implements BasicView, SinglesView {
     this.model = model;
   }
 
-
   @Override
   public Collection<User> getUsers() {
     return all(model.userById());
@@ -112,7 +111,6 @@ public final class View implements BasicView, SinglesView {
 
     return found;
   }
-
 
   @Override
   public VersionInfo getVersion() {
