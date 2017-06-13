@@ -21,6 +21,7 @@ import java.io.File;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.server.NoOpRelay;
+import codeu.chat.server.PersistenceWriter;
 import codeu.chat.server.RemoteRelay;
 import codeu.chat.server.Server;
 import codeu.chat.util.Logger;
@@ -56,7 +57,8 @@ final class ServerMain {
       System.out.println("Invalid id - shutting down server");
       System.exit(1);
     }
-    // This is the directory where it is safe to store data accross runs
+    
+    // This is the directory where it is safe to store data across runs
     // of the server.
     File persistentPath = null;
     RemoteAddress relayAddress = null;
@@ -76,6 +78,8 @@ final class ServerMain {
       LOG.error("%s does not exist", persistentPath);
       System.exit(1);
     }
+    
+    File persistenceFile = new File(persistentPath, "persistence.json");
 
     try (
         final ConnectionSource serverSource = ServerConnectionSource.forPort(port);
@@ -83,7 +87,7 @@ final class ServerMain {
     ) {
 
       LOG.info("Starting server...");
-      runServer(id, secret, serverSource, relaySource);
+      runServer(id, secret, serverSource, relaySource, persistenceFile);
 
     } catch (IOException ex) {
 
@@ -95,15 +99,29 @@ final class ServerMain {
   private static void runServer(Uuid id,
                                 Secret secret,
                                 ConnectionSource serverSource,
-                                ConnectionSource relaySource) {
+                                ConnectionSource relaySource,
+                                File persistenceFile) {
 
     final Relay relay = relaySource == null ?
                         new NoOpRelay() :
                         new RemoteRelay(relaySource);
 
-    final Server server = new Server(id, secret, relay);
+    final Server server;
+    server = new Server(id, secret, relay, persistenceFile);
 
     LOG.info("Created server.");
+    
+    try {
+      if (!persistenceFile.createNewFile()) {
+        LOG.info("Persistence file was found. Loading the snapshot...");
+        // Persistence file couldn't be created because one already exists.
+        // Read the file. (TODO)
+      } else {
+        LOG.info("Persistence file was not found. A blank one has been created.");
+      }
+    } catch (IOException e) {
+      LOG.error("Failed to generate persistence file at %s", persistenceFile.getPath());
+    }
 
     while (true) {
 

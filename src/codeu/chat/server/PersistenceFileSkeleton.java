@@ -1,6 +1,5 @@
 package codeu.chat.server;
 
-import java.util.Collection;
 import java.util.Map;
 
 import codeu.chat.common.ConversationHeader;
@@ -13,17 +12,20 @@ import codeu.chat.util.Uuid;
 public interface PersistenceFileSkeleton {
   public interface ServerInfo {
     Uuid id();
+
     Secret secret();
+
     Uuid lastSeen();
   }
-  
+
   ServerInfo serverInfo();
-  
+
   Map<Uuid, User> users();
-  
+
   Map<Uuid, ConversationHeader> conversationHeaders();
+
   Map<Uuid, ConversationPayload> conversationPayloads();
-  
+
   Map<Uuid, Message> messages();
-  
+
 }

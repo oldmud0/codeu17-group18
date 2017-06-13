@@ -15,6 +15,7 @@
 
 package codeu.chat.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,6 +34,7 @@ import codeu.chat.common.NetworkCode;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
+import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -63,6 +65,8 @@ public final class Server {
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
+  
+  private PersistenceWriter persistenceWriter; // Not final, as it is not required
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 
@@ -193,6 +197,32 @@ public final class Server {
         timeline.scheduleIn(RELAY_REFRESH_MS, this);
       }
     });
+  }
+  
+  public Server(final Uuid id, final Secret secret, final Relay relay, final File persistenceFile) {
+    this(id, secret, relay);
+    
+    this.persistenceWriter = new PersistenceWriter(persistenceFile, view, new ServerInfo() {
+
+      @Override
+      public Uuid id() {
+        return id;
+      }
+
+      @Override
+      public Secret secret() {
+        return secret;
+      }
+
+      @Override
+      public Uuid lastSeen() {
+        return lastSeen;
+      }
+
+    });
+    
+    this.timeline.scheduleIn(PersistenceWriterRunnable.WRITE_INTERVAL_MS,
+        new PersistenceWriterRunnable(persistenceWriter, timeline));
   }
 
   public void handleConnection(final Connection connection) {
