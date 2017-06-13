@@ -193,7 +193,7 @@ public final class Chat {
       @Override
       public void invoke(Scanner args) {
           final VersionInfo version = context.getVersion();
-          if (version.getVersion().equals(Uuid.NULL)) {
+          if (version == null || version.getVersion().equals(Uuid.NULL)) {
             System.out.println("ERROR: No version returned");
           } else {
             System.out.format("Server version: %s\n", version);
