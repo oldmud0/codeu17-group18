@@ -33,6 +33,8 @@
 #                                        the java class when it runs.
 ###############################################################################
 
+from __future__ import print_function
+
 import os
 import shutil
 import subprocess
@@ -97,8 +99,8 @@ def build(config) :
   command += [ '-Xlint' ]
   command += src_files
 
-  print('running : %s' % command)
-  print('Build %s' % ('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
+  print('Running: {}'.format(command))
+  print('Build {}'.format('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
 
 
 # RUN
@@ -116,11 +118,11 @@ def run(config, start_class_path, arguments):
   command += [ start_class_path ]
   command += arguments
 
-  print 'Running: [',
+  print('Running: [', end=' ')
   for x in command :
-    print x,
-  print ']'
-  print('Run %s' % ('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
+    print(x, end=' ')
+  print(']')
+  print('Run {}'.format('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
 
 
 # USAGE
@@ -162,13 +164,13 @@ def main(args) :
         print('Run command requires a java class to run.')
         usage();
     else :
-      print 'Unknown command: [',
+      print('Unknown command: [', end=' ')
       for x in args :
-        print x,
-      print ']'
+        print(x, end=' ')
+      print(']')
       usage();
   else :
-    print ('No parameters provided.')
+    print('No parameters provided.')
     usage()
 
 
