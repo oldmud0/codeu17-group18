@@ -1,13 +1,18 @@
+// Tokenizer
+//
+// The Tokenizer class changes the input for each command so that it tokenizes
+// the input to be a collection of tokens to be a single word or series of words
+// surrounded by quotes
+
 package codeu.chat.util;
 
-import java.io.*;
 import java.io.IOException;
-import java.lang.*;
+import java.lang.StringBuilder;
 
 public final class Tokenizer {
 
-  private StringBuilder token;
-  private String source;
+  private final StringBuilder token;
+  private final String source;
   private int at;
 
   public Tokenizer(String source) {
@@ -16,6 +21,9 @@ public final class Tokenizer {
     this.at = 0;
   }
 
+  // pre: the current index must be less than the length of input
+  // post: returns a string representation of the token created from input
+  // and reads next word from input
   public String next() throws IOException {
     while (remaining() > 0 && Character.isWhitespace(peek())) {
       read();
@@ -29,6 +37,9 @@ public final class Tokenizer {
     }
   }
 
+  // pre: the current index must be less than the length of input
+  // post: returns a string representation of tokens of given input without
+  // quotes
   private String readWithNoQuotes() throws IOException{
     token.setLength(0);
     while (remaining() > 0 && !Character.isWhitespace(peek())) {
@@ -37,7 +48,9 @@ public final class Tokenizer {
     return token.toString();
   }
 
-
+  // pre: the current index must be less than the length of input
+  // post: returns a string representation of tokens of given input without
+  // quotes
   private String readWithQuotes() throws IOException {
     token.setLength(0);
     if (read() != '"') {
@@ -50,10 +63,13 @@ public final class Tokenizer {
     return token.toString();
   }
 
+  // returns the number of letters remaining in input
   private int remaining() {
     return this.source.length() - this.at;
   }
 
+  // pre: the current index must be less than the length of input
+  // post: returns letter at current index
   private char peek() throws IOException{
       if (this.at < source.length()) {
         return source.charAt(this.at);
@@ -62,6 +78,7 @@ public final class Tokenizer {
      }
   }
 
+  // reads and returns the next letter in the input
   private char read() throws IOException{
     final char c = peek();
     this.at = this.at + 1;

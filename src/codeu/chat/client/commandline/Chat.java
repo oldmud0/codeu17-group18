@@ -18,8 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Stack;
-import java.io.*;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
+
 
 import codeu.chat.client.core.Context;
 import codeu.chat.client.core.ConversationContext;
@@ -55,8 +57,7 @@ public final class Chat {
     for (String token = tokenizer.next(); token != null; token = tokenizer.next()) {
       args.add(token);
     }
-    final String command = args.get(0);
-    args.remove(0);
+    final String command = args.remove(0);
 
     // Because "exit" and "back" are applicable to every panel, handle
     // those commands here to avoid having to implement them for each

@@ -6,20 +6,24 @@ import org.junit.Test;
 
 public final class TokenizerTest {
   @Test
-  public void testWithQuotes() throws IOException {
-    final Tokenizer tokenizer = new Tokenizer("hello world how are you");
+  public void testWithNoQuotes() throws IOException {
+    final Tokenizer tokenizer = new Tokenizer("hello world how are you 4 $");
     assertEquals(tokenizer.next(), "hello");
     assertEquals(tokenizer.next(), "world");
     assertEquals(tokenizer.next(), "how");
     assertEquals(tokenizer.next(), "are");
     assertEquals(tokenizer.next(), "you");
+    assertEquals(tokenizer.next(), "4");
+    assertEquals(tokenizer.next(), "$");
     assertEquals(tokenizer.next(), null);
   }
   @Test
-  public void testWithNoQuotes() throws IOException {
-    final Tokenizer tokenizer = new Tokenizer("\"hello world\" \"how are you\"");
+  public void testWithQuotes() throws IOException {
+    final Tokenizer tokenizer = new Tokenizer("\"hello world\" hey \"how are you\" fine");
     assertEquals(tokenizer.next(), "hello world");
+    assertEquals(tokenizer.next(), "hey");
     assertEquals(tokenizer.next(), "how are you");
+    assertEquals(tokenizer.next(), "fine");
     assertEquals(tokenizer.next(), null);
    }
 }
