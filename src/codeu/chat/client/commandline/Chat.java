@@ -28,6 +28,8 @@ import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
 import codeu.chat.util.Tokenizer;
+import codeu.chat.common.VersionInfo;
+import codeu.chat.util.Uuid;
 
 public final class Chat {
 
@@ -115,6 +117,8 @@ public final class Chat {
         System.out.println("    Add a new user with the given name.");
         System.out.println("  u-sign-in <name>");
         System.out.println("    Sign in as the user with the given name.");
+        System.out.println("  version");
+        System.out.println("    Print the server version.");
         System.out.println("  exit");
         System.out.println("    Exit the program.");
       }
@@ -186,6 +190,22 @@ public final class Chat {
           }
         }
         return null;
+      }
+    });
+
+    // VERSION (server version)
+    //
+    // Print the server's version.
+    //
+    panel.register("version", new Panel.Command() {
+      @Override
+      public void invoke(Scanner args) {
+          final VersionInfo version = context.getVersion();
+          if (version == null || version.getVersion().equals(Uuid.NULL)) {
+            System.out.println("ERROR: No version returned");
+          } else {
+            System.out.format("Server version: %s\n", version);
+          }
       }
     });
 
