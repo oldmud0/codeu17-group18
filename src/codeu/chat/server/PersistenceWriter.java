@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,10 +12,7 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.gson.stream.JsonWriter;
 
 import codeu.chat.common.ConversationHeader;
@@ -24,8 +20,8 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.OmniView;
 import codeu.chat.common.User;
+import codeu.chat.util.Serializer;
 import codeu.chat.util.Logger;
-import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 
 /**
