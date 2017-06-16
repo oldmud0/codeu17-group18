@@ -18,14 +18,19 @@ public interface PersistenceFileSkeleton {
     Uuid lastSeen();
   }
 
+  @JsonProperty("server_info")
   ServerInfo serverInfo();
 
+  @JsonProperty("users")
   Map<Uuid, User> users();
 
+  @JsonProperty("conversation_headers")
   Map<Uuid, ConversationHeader> conversationHeaders();
 
+  @JsonProperty("conversation_payloads")
   Map<Uuid, ConversationPayload> conversationPayloads();
 
+  @JsonProperty("messages")
   Map<Uuid, Message> messages();
 
 }

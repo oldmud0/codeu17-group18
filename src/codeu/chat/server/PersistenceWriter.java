@@ -3,6 +3,9 @@ package codeu.chat.server;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,6 +13,10 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.stream.JsonWriter;
 
 import codeu.chat.common.ConversationHeader;
@@ -17,6 +24,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.OmniView;
 import codeu.chat.common.User;
+import codeu.chat.util.Logger;
 import codeu.chat.util.Uuid;
 
 /**
@@ -41,6 +49,8 @@ import codeu.chat.util.Uuid;
  *
  */
 public class PersistenceWriter {
+
+  private static final Logger.Log LOG = Logger.newLog(PersistenceWriter.class);
 
   /** The file to be written. */
   private final File file;
@@ -115,48 +125,36 @@ public class PersistenceWriter {
         .setDateFormat(DateFormat.LONG)
         .serializeNulls()
         .setPrettyPrinting()
+        .registerTypeAdapter(PersistenceFileSkeleton.class, new PersistenceSerializer())
         .create();
 
-    try (JsonWriter writer = gson.newJsonWriter(new FileWriter(file))) {
-      gson.toJson(fileSkeleton, PersistenceFileSkeleton.class, writer);
-    } catch (IOException e) {
-      throw e;
-    }
+    JsonWriter writer = gson.newJsonWriter(new FileWriter(file));
+    gson.toJson(fileSkeleton, PersistenceFileSkeleton.class, writer);
+    writer.close();
   }
-  
-// Commented out for now, I don't know if I'll need it later.
-//  /**
-//   * JSON serializer/deserializer for all objects that use the SERIALIZER.
-//   * 
-//   * <p>The only reason we need this is because for some odd reason, instead
-//   * of implementing {@link codeu.chat.util.Serializer}, there is simply
-//   * a field called SERIALIZER, so we cannot immediately distinguish
-//   * between serializable classes and non-serializable classes.
-//   * 
-//   * @param <T>  Type of data to serialize
-//   */
-//  
-//  private static class JSONAdaptedSerializer<T> implements JsonSerializer<T> {
-//    
-//    private static final Map<Class<?>, Serializer<?>> SERIALIZERS;
-//    static {
-//      // In Java 9, this initialization strategy should be replaced with Map.of.
-//      
-//      // This is where you start wondering where the 'auto' keyword is.
-//      Map<Class<?>, Serializer<?>> map = new HashMap<Class<?>, Serializer<?>>();
-//      map.put(User.class,                User.SERIALIZER);
-//      map.put(Message.class,             Message.SERIALIZER);
-//      map.put(ConversationHeader.class,  ConversationHeader.SERIALIZER);
-//      map.put(ConversationPayload.class, ConversationPayload.SERIALIZER);
-//      map.put(Time.class,                Time.SERIALIZER);
-//      
-//      SERIALIZERS = Collections.unmodifiableMap(map);
-//    }
-//
-//    @Override
-//    public JsonElement serialize(T source, Type typeOfSource, JsonSerializationContext context) {
-//      return null;
-//    }
-//  }
-//  
+
+  private class PersistenceSerializer implements JsonSerializer<PersistenceFileSkeleton> {
+
+    @Override
+    public JsonElement serialize(PersistenceFileSkeleton source, Type typeOfSource, JsonSerializationContext context) {
+      final JsonObject root = new JsonObject();
+
+      Method[] methods = PersistenceFileSkeleton.class.getMethods();
+
+      for (Method method : methods) {
+        Type returnType = method.getGenericReturnType();
+        JsonProperty jsonProperty = (JsonProperty) method.getAnnotation(JsonProperty.class);
+        String propertyName = jsonProperty.value();
+        LOG.verbose("Method name: %s, returns %s%n", method.getName(), returnType);
+
+        try {
+          root.add(propertyName, context.serialize(method.invoke(source), returnType));
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+          LOG.error(e, "Error serializing property %s", method.getName());
+        }
+      }
+      return root;
+    }
+
+  }
 }
