@@ -9,9 +9,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import codeu.chat.common.ConversationHeader;
+import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
+import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 
 public final class PersistenceTest {
@@ -24,11 +26,13 @@ public final class PersistenceTest {
 
   private File persistenceFile;
 
-  private static final class MockServerInfo implements ServerInfo {
+  private Uuid id;
+
+  private final class MockServerInfo implements ServerInfo {
 
     @Override
     public Uuid id() {
-      return Uuid.NULL;
+      return id;
     }
 
     @Override
@@ -48,6 +52,7 @@ public final class PersistenceTest {
     model = new Model();
     view = new View(model);
     controller = new Controller(Uuid.NULL, model);
+    id = new RandomUuidGenerator(new Uuid(12345), Time.now().inMs()).make();
 
     if (!PERSISTENCE_PATH.isDirectory())
       PERSISTENCE_PATH.mkdirs();

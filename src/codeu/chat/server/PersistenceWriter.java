@@ -25,6 +25,7 @@ import codeu.chat.common.Message;
 import codeu.chat.common.OmniView;
 import codeu.chat.common.User;
 import codeu.chat.util.Logger;
+import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 
 /**
@@ -39,11 +40,10 @@ import codeu.chat.util.Uuid;
  * <li>Server's last used version
  * </ul>
  * 
- * <p>Other data present in the model, such as users, conversations,
- * and messages are included in the persistence file in a logical order. 
+ * <p>Other data present in the model, such as users, conversations, and messages
+ * are included in the persistence file in a logical order.
  * 
- * <p>The above data is serialized into JSON and written periodically
- * to disk.
+ * <p>The above data is serialized into JSON and written periodically to disk.
  * 
  * @see PersistenceWriterRunnable
  *
@@ -125,7 +125,12 @@ public class PersistenceWriter {
         .setDateFormat(DateFormat.LONG)
         .serializeNulls()
         .setPrettyPrinting()
-        .registerTypeAdapter(PersistenceFileSkeleton.class, new PersistenceSerializer())
+        .registerTypeAdapter(PersistenceFileSkeleton.class,
+            new AnnotatedSerializer<PersistenceFileSkeleton>(PersistenceFileSkeleton.class))
+        .registerTypeAdapter(PersistenceFileSkeleton.ServerInfo.class,
+            new AnnotatedSerializer<PersistenceFileSkeleton.ServerInfo>(PersistenceFileSkeleton.ServerInfo.class))
+        .registerTypeAdapter(Uuid.class, new UuidSerializer())
+        .registerTypeAdapter(Time.class, new TimeSerializer())
         .create();
 
     JsonWriter writer = gson.newJsonWriter(new FileWriter(file));
@@ -133,13 +138,19 @@ public class PersistenceWriter {
     writer.close();
   }
 
-  private class PersistenceSerializer implements JsonSerializer<PersistenceFileSkeleton> {
+  private class AnnotatedSerializer<T> implements JsonSerializer<T> {
+
+    private final Class<T> genericType;
+
+    public AnnotatedSerializer(Class<T> genericType) {
+      this.genericType = genericType;
+    }
 
     @Override
-    public JsonElement serialize(PersistenceFileSkeleton source, Type typeOfSource, JsonSerializationContext context) {
+    public JsonElement serialize(T source, Type typeOfSource, JsonSerializationContext context) {
       final JsonObject root = new JsonObject();
 
-      Method[] methods = PersistenceFileSkeleton.class.getMethods();
+      Method[] methods = genericType.getMethods();
 
       for (Method method : methods) {
         Type returnType = method.getGenericReturnType();
@@ -155,6 +166,21 @@ public class PersistenceWriter {
       }
       return root;
     }
+  }
 
+  private class UuidSerializer implements JsonSerializer<Uuid> {
+
+    @Override
+    public JsonElement serialize(Uuid source, Type typeOfSource, JsonSerializationContext context) {
+      return context.serialize(source.toString(), String.class);
+    }
+  }
+
+  private class TimeSerializer implements JsonSerializer<Time> {
+
+    @Override
+    public JsonElement serialize(Time source, Type typeOfSource, JsonSerializationContext context) {
+      return context.serialize(source.inMs(), long.class);
+    }
   }
 }

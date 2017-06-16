@@ -11,10 +11,13 @@ import codeu.chat.util.Uuid;
 
 public interface PersistenceFileSkeleton {
   public interface ServerInfo {
+    @JsonProperty("uuid")
     Uuid id();
 
+    @JsonProperty("secret")
     Secret secret();
 
+    @JsonProperty("last_seen")
     Uuid lastSeen();
   }
 
