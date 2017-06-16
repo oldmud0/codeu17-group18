@@ -26,6 +26,7 @@ import codeu.chat.common.OmniView;
 import codeu.chat.common.User;
 import codeu.chat.util.Serializer;
 import codeu.chat.util.Logger;
+import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 
 /**
@@ -143,13 +144,19 @@ public class PersistenceWriter {
     writer.close();
   }
 
-  private class PersistenceSerializer implements JsonSerializer<PersistenceFileSkeleton> {
+  private class AnnotatedSerializer<T> implements JsonSerializer<T> {
+
+    private final Class<T> genericType;
+
+    public AnnotatedSerializer(Class<T> genericType) {
+      this.genericType = genericType;
+    }
 
     @Override
-    public JsonElement serialize(PersistenceFileSkeleton source, Type typeOfSource, JsonSerializationContext context) {
+    public JsonElement serialize(T source, Type typeOfSource, JsonSerializationContext context) {
       final JsonObject root = new JsonObject();
 
-      Method[] methods = PersistenceFileSkeleton.class.getMethods();
+      Method[] methods = genericType.getMethods();
 
       for (Method method : methods) {
         Type returnType = method.getGenericReturnType();
@@ -203,6 +210,14 @@ public class PersistenceWriter {
     @Override
     public JsonElement serialize(Uuid source, Type typeOfSource, JsonSerializationContext context) {
       return context.serialize(source.toString(), String.class);
+    }
+  }
+
+  private class TimeSerializer implements JsonSerializer<Time> {
+
+    @Override
+    public JsonElement serialize(Time source, Type typeOfSource, JsonSerializationContext context) {
+      return context.serialize(source.inMs(), long.class);
     }
   }
 
