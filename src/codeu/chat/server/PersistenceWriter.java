@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,7 +13,10 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.stream.JsonWriter;
 
 import codeu.chat.common.ConversationHeader;
@@ -137,6 +141,31 @@ public class PersistenceWriter {
     JsonWriter writer = gson.newJsonWriter(new FileWriter(file));
     gson.toJson(fileSkeleton, PersistenceFileSkeleton.class, writer);
     writer.close();
+  }
+
+  private class PersistenceSerializer implements JsonSerializer<PersistenceFileSkeleton> {
+
+    @Override
+    public JsonElement serialize(PersistenceFileSkeleton source, Type typeOfSource, JsonSerializationContext context) {
+      final JsonObject root = new JsonObject();
+
+      Method[] methods = PersistenceFileSkeleton.class.getMethods();
+
+      for (Method method : methods) {
+        Type returnType = method.getGenericReturnType();
+        JsonProperty jsonProperty = (JsonProperty) method.getAnnotation(JsonProperty.class);
+        String propertyName = jsonProperty.value();
+        LOG.verbose("Method name: %s, returns %s%n", method.getName(), returnType);
+
+        try {
+          root.add(propertyName, context.serialize(method.invoke(source), returnType));
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+          LOG.error(e, "Error serializing property %s", method.getName());
+        }
+      }
+
+      return root;
+    }
   }
 
   private class AnnotatedSerializer<T> implements JsonSerializer<T> {
