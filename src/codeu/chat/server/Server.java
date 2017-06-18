@@ -174,6 +174,14 @@ public final class Server {
         Serializers.collection(Message.SERIALIZER).write(out, messages);
       }
     });
+    
+    this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
+        Uuid.SERIALIZER.write(out, version.getVersion());
+      }
+    });
 
     this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
       @Override

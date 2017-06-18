@@ -1,3 +1,5 @@
 bin/
 *.log
 .project
+.classpath
+.settings/
