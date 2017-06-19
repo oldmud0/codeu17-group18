@@ -15,8 +15,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.gson.stream.JsonReader;
 
 import codeu.chat.common.ConversationHeader;
@@ -25,13 +23,12 @@ import codeu.chat.common.Message;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
-import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 
 public class PersistenceReader {
-  
+
   private static final Logger.Log LOG = Logger.newLog(PersistenceReader.class);
 
   private final File persistenceFile;
@@ -69,8 +66,8 @@ public class PersistenceReader {
     protected Map<Uuid, User> users;
     protected Map<Uuid, ConversationHeader> conversationHeaders;
     protected Map<Uuid, ConversationPayload> conversationPayloads;
-    protected Map<Uuid, Message> messages;  
-    
+    protected Map<Uuid, Message> messages;
+
     @Override
     public ServerInfo serverInfo() {
       return serverInfo;
@@ -98,32 +95,32 @@ public class PersistenceReader {
 
   };
 
-	public PersistenceReader(File persistenceFile) {
-	  this.persistenceFile = persistenceFile;
-	}
+  public PersistenceReader(File persistenceFile) {
+    this.persistenceFile = persistenceFile;
+  }
 
-	public void read() throws IOException {
-	  Gson gson = new GsonBuilder()
-	      .registerTypeAdapter(PersistenceFileSkeleton.class,
-	          new AnnotatedDeserializer<PersistenceFileSkeleton>(
-	              PersistenceFileSkeleton.class, fileContainer))
-	      .registerTypeAdapter(PersistenceFileSkeleton.ServerInfo.class,
+  public void read() throws IOException {
+    Gson gson = new GsonBuilder()
+        .registerTypeAdapter(PersistenceFileSkeleton.class,
+            new AnnotatedDeserializer<PersistenceFileSkeleton>(
+                PersistenceFileSkeleton.class, fileContainer))
+        .registerTypeAdapter(PersistenceFileSkeleton.ServerInfo.class,
             new AnnotatedDeserializer<PersistenceFileSkeleton.ServerInfo>(
                 PersistenceFileSkeleton.ServerInfo.class, fileContainer.serverInfo()))
-	      .registerTypeAdapter(Uuid.class, new UuidDeserializer())
-	      .registerTypeAdapter(Time.class, new TimeDeserializer())
-	      .create();
+        .registerTypeAdapter(Uuid.class, new UuidDeserializer())
+        .registerTypeAdapter(Time.class, new TimeDeserializer())
+        .create();
 
-	  JsonReader reader = gson.newJsonReader(new FileReader(persistenceFile));
-	  fileContainer = gson.fromJson(reader, PersistenceFileSkeleton.class);
-	}
-	
-	/**
-	 * Returns a container that contains the data read from the persistence file. 
-	 */
-	public PersistenceFileSkeleton getContainer() {
-	  return fileContainer;
-	}
+    JsonReader reader = gson.newJsonReader(new FileReader(persistenceFile));
+    fileContainer = gson.fromJson(reader, PersistenceFileSkeleton.class);
+  }
+
+  /**
+   * Returns a container that contains the data read from the persistence file.
+   */
+  public PersistenceFileSkeleton getContainer() {
+    return fileContainer;
+  }
 
   private class AnnotatedDeserializer<T> implements JsonDeserializer<T> {
 
@@ -143,27 +140,30 @@ public class PersistenceReader {
       Method[] methods = type.getMethods();
 
       // For each method in the persistence file skeleton...
-      // (a method, in this case, represents a root object that will be stored) 
+      // (a method, in this case, represents a root object that will be stored)
       for (Method method : methods) {
-        // Get the type of that method and check if it has the JsonProperty annotation.
+        // Get the type of that method and check if it has the JsonProperty
+        // annotation.
         Type returnType = method.getGenericReturnType();
 
         JsonProperty jsonProperty = (JsonProperty) method.getAnnotation(JsonProperty.class);
         String propertyName = jsonProperty.value();
         LOG.verbose("Method name: %s, returns %s%n", method.getName(), returnType);
-        
+
         Field methodField;
         try {
-          // Now find the field that corresponds to that method in *our* implementation
+          // Now find the field that corresponds to that method in *our*
+          // implementation
           // of the PersistenceFileSkeleton.
           methodField = target.getClass().getDeclaredField(method.getName());
 
-          // Assuming the field was found, we'll parse the contents stored in that property name
-          // (as dictated by the @JsonProperty annotation) and put those contents right in the
-          // field we just found.
+          // Assuming the field was found, we'll parse the contents stored in
+          // that property name (as dictated by the @JsonProperty annotation) and put those
+          // contents right in the field we just found.
           methodField.set(target, context.deserialize(obj.get(propertyName), returnType));
         } catch (NoSuchFieldException | SecurityException | IllegalAccessException | IllegalArgumentException e) {
-          // In case we didn't find any field to put our data into, we will not deserialize this property.
+          // In case we didn't find any field to put our data into, we will not
+          // deserialize this property.
           LOG.error(e, "Error deserializing property %s", method.getName());
         }
       }
@@ -171,7 +171,7 @@ public class PersistenceReader {
     }
 
   }
-  
+
   private class UuidDeserializer implements JsonDeserializer<Uuid> {
 
     @Override
@@ -186,7 +186,7 @@ public class PersistenceReader {
     }
 
   }
-  
+
   private class TimeDeserializer implements JsonDeserializer<Time> {
 
     @Override

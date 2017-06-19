@@ -69,7 +69,7 @@ public final class PersistenceTest {
     if (!persistenceFile.exists())
       persistenceFile.createNewFile();
   }
-  
+
   private void createData() {
     final User user = controller.newUser("Test User");
     final ConversationHeader conversation = controller.newConversation("Test Conversation", user.id);
@@ -102,27 +102,35 @@ public final class PersistenceTest {
 
   @Test
   public void testRewrite() throws IOException {
-    testWrite(); // Write initial data
+    // Write initial data
+    testWrite();
 
     final PersistenceReader reader = new PersistenceReader(persistenceFile);
 
-    reader.read(); // Read initial data
-    
-    assertFalse("Check that the persistence reader actually created the first container", reader.getContainer() == null);
-    
-    PersistenceFileSkeleton container1 = reader.getContainer(); // Put initial data into container 1
+    // Read initial data
+    reader.read();
+
+    assertFalse("Check that the persistence reader actually created the first container",
+        reader.getContainer() == null);
+
+    // Put initial data into container 1
+    PersistenceFileSkeleton container1 = reader.getContainer();
 
     final PersistenceWriter writer = new PersistenceWriter(persistenceFile, container1);
-    
+
     assertFalse("Check that the persistence writer has a valid reference", writer == null);
-    
-    writer.write(); // Write the data we just read
-    
-    reader.read(); // Read that data again
-    
-    assertFalse("Check that the persistence reader actually created the second container", reader.getContainer() == null);
-    
-    PersistenceFileSkeleton container2 = reader.getContainer(); // Put reread data into container 2
+
+    // Write the data we just read
+    writer.write();
+
+    // Read that data again
+    reader.read();
+
+    assertFalse("Check that the persistence reader actually created the second container",
+        reader.getContainer() == null);
+
+    // Put reread data into container 2
+    PersistenceFileSkeleton container2 = reader.getContainer();
 
     // Reread file should be the same as the original read file.
     assertEquals(container1.conversationHeaders(), container2.conversationHeaders());
