@@ -230,6 +230,11 @@ public final class Server {
         return lastSeen;
       }
 
+      @Override
+      public VersionInfo version() {
+        return version;
+      }
+
     });
     
     this.timeline.scheduleIn(PersistenceWriterRunnable.WRITE_INTERVAL_MS,

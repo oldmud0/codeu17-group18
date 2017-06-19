@@ -7,6 +7,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 
 public interface PersistenceFileSkeleton {
@@ -19,6 +20,9 @@ public interface PersistenceFileSkeleton {
 
     @JsonProperty("last_seen")
     Uuid lastSeen();
+
+    @JsonProperty("version")
+    VersionInfo version();
   }
 
   @JsonProperty("server_info")

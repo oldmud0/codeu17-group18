@@ -12,6 +12,7 @@ import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
@@ -43,6 +44,11 @@ public final class PersistenceTest {
     @Override
     public Uuid lastSeen() {
       return Uuid.NULL;
+    }
+
+    @Override
+    public VersionInfo version() {
+      return new VersionInfo();
     }
 
   }
