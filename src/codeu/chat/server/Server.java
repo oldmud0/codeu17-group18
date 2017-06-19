@@ -372,7 +372,7 @@ public final class Server {
       public void run() {
         try {
 
-          LOG.info("Reading update from relay...");
+          LOG.verbose("Reading update from relay...");
 
           for (final Relay.Bundle bundle : relay.read(id, secret, lastSeen, 32)) {
             onBundle(bundle);
