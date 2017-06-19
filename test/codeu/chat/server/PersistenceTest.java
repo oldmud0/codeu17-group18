@@ -51,8 +51,8 @@ public final class PersistenceTest {
   public void doBefore() throws IOException {
     model = new Model();
     view = new View(model);
-    controller = new Controller(Uuid.NULL, model);
     id = new RandomUuidGenerator(new Uuid(12345), Time.now().inMs()).make();
+    controller = new Controller(id, model);
 
     if (!PERSISTENCE_PATH.isDirectory())
       PERSISTENCE_PATH.mkdirs();
