@@ -107,8 +107,7 @@ final class ServerMain {
                         new NoOpRelay() :
                         new RemoteRelay(relaySource);
 
-    final Server server;
-    server = new Server(id, secret, relay, persistenceFile);
+    Server server;
 
     LOG.info("Created server.");
     
@@ -116,13 +115,16 @@ final class ServerMain {
       if (!persistenceFile.createNewFile()) {
         LOG.info("Persistence file was found. Loading the snapshot...");
         // Persistence file couldn't be created because one already exists.
-        // Read the file. (TODO)
         PersistenceReader reader = new PersistenceReader(persistenceFile);
+        reader.read();
+        server = new Server(reader.getContainer(), relay, persistenceFile);
       } else {
         LOG.info("Persistence file was not found. A blank one has been created.");
+        server = new Server(id, secret, relay, persistenceFile);
       }
     } catch (IOException e) {
       LOG.error("Failed to generate persistence file at %s", persistenceFile.getPath());
+      server = new Server(id, secret, relay);
     }
 
     while (true) {

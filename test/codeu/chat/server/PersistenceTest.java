@@ -1,5 +1,6 @@
 package codeu.chat.server;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.File;
@@ -29,7 +30,7 @@ public final class PersistenceTest {
 
   private Uuid id;
 
-  private final class MockServerInfo implements ServerInfo {
+  private final ServerInfo serverInfo = new ServerInfo() {
 
     @Override
     public Uuid id() {
@@ -51,7 +52,7 @@ public final class PersistenceTest {
       return new VersionInfo();
     }
 
-  }
+  };
 
   @Before
   public void doBefore() throws IOException {
@@ -68,18 +69,66 @@ public final class PersistenceTest {
     if (!persistenceFile.exists())
       persistenceFile.createNewFile();
   }
-
-  @Test
-  public void testWrite() throws IOException {
+  
+  private void createData() {
     final User user = controller.newUser("Test User");
     final ConversationHeader conversation = controller.newConversation("Test Conversation", user.id);
     controller.newMessage(user.id, conversation.id, "Test body");
+  }
 
-    final PersistenceWriter writer = new PersistenceWriter(persistenceFile, view, new MockServerInfo());
+  @Test
+  public void testWrite() throws IOException {
+    createData();
+
+    final PersistenceWriter writer = new PersistenceWriter(persistenceFile, view, serverInfo);
 
     assertFalse("Check that the persistence writer has a valid reference", writer == null);
 
     writer.write();
   }
 
+  @Test
+  public void testRead() throws IOException {
+    testWrite();
+
+    final PersistenceReader reader = new PersistenceReader(persistenceFile);
+
+    assertFalse("Check that the persistence reader has a valid reference", reader == null);
+
+    reader.read();
+
+    assertFalse("Check that the persistence reader actually created the container", reader.getContainer() == null);
+  }
+
+  @Test
+  public void testRewrite() throws IOException {
+    testWrite(); // Write initial data
+
+    final PersistenceReader reader = new PersistenceReader(persistenceFile);
+
+    reader.read(); // Read initial data
+    
+    assertFalse("Check that the persistence reader actually created the first container", reader.getContainer() == null);
+    
+    PersistenceFileSkeleton container1 = reader.getContainer(); // Put initial data into container 1
+
+    final PersistenceWriter writer = new PersistenceWriter(persistenceFile, container1);
+    
+    assertFalse("Check that the persistence writer has a valid reference", writer == null);
+    
+    writer.write(); // Write the data we just read
+    
+    reader.read(); // Read that data again
+    
+    assertFalse("Check that the persistence reader actually created the second container", reader.getContainer() == null);
+    
+    PersistenceFileSkeleton container2 = reader.getContainer(); // Put reread data into container 2
+
+    // Reread file should be the same as the original read file.
+    assertEquals(container1.conversationHeaders(), container2.conversationHeaders());
+    assertEquals(container1.conversationPayloads(), container2.conversationPayloads());
+    assertEquals(container1.users(), container2.users());
+    assertEquals(container1.messages(), container2.messages());
+    assertEquals(container1.serverInfo(), container2.serverInfo());
+  }
 }

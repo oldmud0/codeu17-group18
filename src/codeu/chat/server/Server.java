@@ -240,6 +240,29 @@ public final class Server {
     this.timeline.scheduleIn(PersistenceWriterRunnable.WRITE_INTERVAL_MS,
         new PersistenceWriterRunnable(persistenceWriter, timeline));
   }
+  
+  public Server(final PersistenceFileSkeleton container, final Relay relay, final File persistenceFile) {
+    this(container.serverInfo().id(), container.serverInfo().secret(), relay, persistenceFile);
+    lastSeen = container.serverInfo().lastSeen();
+    // XXX: version is not written!
+    adaptToModel(container);
+  }
+
+  private void adaptToModel(PersistenceFileSkeleton container) {
+    for (User user : container.users().values()) {
+      model.add(user);
+    }
+
+    Map<Uuid, ConversationPayload> payloads = container.conversationPayloads();
+    for (ConversationHeader conv : container.conversationHeaders().values()) {
+      ConversationPayload payload = payloads.get(conv.id);
+      model.add(conv, payload);
+    }
+
+    for (Message msg : container.messages().values()) {
+      model.add(msg);
+    }
+  }
 
   public void handleConnection(final Connection connection) {
     timeline.scheduleNow(new Runnable() {

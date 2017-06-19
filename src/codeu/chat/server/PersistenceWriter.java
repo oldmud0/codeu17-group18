@@ -56,13 +56,13 @@ public class PersistenceWriter {
   private final File file;
 
   /** The view used to read the data model. */
-  private final OmniView view;
+  private OmniView view;
 
   /** Some persistence info that is private to the server implementation. */
-  private final PersistenceFileSkeleton.ServerInfo serverInfo;
+  private PersistenceFileSkeleton.ServerInfo serverInfo;
 
   /** The file skeleton that will be used for serialization. */
-  private final PersistenceFileSkeleton fileSkeleton = new PersistenceFileSkeleton() {
+  private PersistenceFileSkeleton fileSkeleton = new PersistenceFileSkeleton() {
 
     @Override
     public ServerInfo serverInfo() {
@@ -115,6 +115,11 @@ public class PersistenceWriter {
     this.file = file;
     this.view = view;
     this.serverInfo = serverInfo;
+  }
+  
+  public PersistenceWriter(File file, PersistenceFileSkeleton fileSkeleton) {
+    this.file = file;
+    this.fileSkeleton = fileSkeleton;
   }
 
   /**
