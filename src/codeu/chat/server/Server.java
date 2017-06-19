@@ -35,6 +35,7 @@ import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -67,6 +68,8 @@ public final class Server {
   private Uuid lastSeen = Uuid.NULL;
   
   private PersistenceWriter persistenceWriter; // Not final, as it is not required
+
+  private final VersionInfo version = new VersionInfo();
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 
@@ -175,6 +178,14 @@ public final class Server {
         Serializers.collection(Message.SERIALIZER).write(out, messages);
       }
     });
+    
+    this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
+        Uuid.SERIALIZER.write(out, version.getVersion());
+      }
+    });
 
     this.timeline.scheduleNow(new Runnable() {
       @Override
@@ -217,6 +228,11 @@ public final class Server {
       @Override
       public Uuid lastSeen() {
         return lastSeen;
+      }
+
+      @Override
+      public VersionInfo version() {
+        return version;
       }
 
     });

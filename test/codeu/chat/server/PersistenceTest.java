@@ -12,6 +12,7 @@ import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
@@ -45,14 +46,19 @@ public final class PersistenceTest {
       return Uuid.NULL;
     }
 
+    @Override
+    public VersionInfo version() {
+      return new VersionInfo();
+    }
+
   }
 
   @Before
   public void doBefore() throws IOException {
     model = new Model();
     view = new View(model);
-    controller = new Controller(Uuid.NULL, model);
     id = new RandomUuidGenerator(new Uuid(12345), Time.now().inMs()).make();
+    controller = new Controller(id, model);
 
     if (!PERSISTENCE_PATH.isDirectory())
       PERSISTENCE_PATH.mkdirs();
