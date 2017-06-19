@@ -53,4 +53,8 @@ public class VersionInfo {
       return Uuid.NULL;
     }
   }
+
+  public String toString() {
+    return version.toString();
+  }
 }
