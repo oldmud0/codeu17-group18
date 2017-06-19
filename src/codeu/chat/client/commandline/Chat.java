@@ -217,19 +217,19 @@ public final class Chat{
       }
     });
     */
-    /*
-    panel.register("info", new Panel.Command() {
+    
+    panel.register("serverinfo", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
         final ServerInfo info = context.getInfo();
         if(info == null) {
           System.out.println("ERROR: No info returned");
         } else {
-          System.out.print("Server info: %s\n", info);
+          System.out.format("Server info: %s\n", info.toString());
         }
       }
     });
-    */
+    
 
 
     // VERSION (server version)
