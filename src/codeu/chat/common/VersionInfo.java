@@ -38,6 +38,9 @@ public class VersionInfo {
     this.version = version;
   }
 
+  /**
+   * Retrieves the stored UUID form of the version.
+   */
   public Uuid getVersion() {
     return version;
   }
@@ -54,5 +57,4 @@ public class VersionInfo {
       return Uuid.NULL;
     }
   }
-  
 }
