@@ -34,6 +34,7 @@ import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -225,11 +226,7 @@ public final class Server {
             command.onMessage(connection.in(), connection.out());
             LOG.info("Connection accepted");
           }
-          if (type == NetworkCode.SERVER_INFO_REQUEST) {
-              Seralizers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
-              Uuid.SERIALIZER.write(out, info.version);
-          } 
-        catch (Exception ex) {
+        } catch (Exception ex) {
 
           LOG.error(ex, "Exception while handling connection.");
 

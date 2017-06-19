@@ -21,6 +21,7 @@ import codeu.chat.common.BasicView;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.connections.ConnectionSource;
+import codeu.chat.util.ServerInfo;
 
 public final class Context {
 
@@ -51,11 +52,8 @@ public final class Context {
     return view.getVersion();
   }
 
-  public Info getInfo() {
+  public ServerInfo getInfo() {
     return view.getInfo();
   }
 
-  public VersionInfo getVersion() {
-    return view.getVersion();
-  }
 }

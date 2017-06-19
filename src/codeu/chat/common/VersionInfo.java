@@ -17,19 +17,14 @@ import codeu.chat.util.Uuid;
 public class VersionInfo {
   private static final String CURRENT_VERSION = "1.0.0";
 
-  private Uuid version;
+  private final Uuid version;
 
   /**
    * Creates a new VersionInfo object with the current supported version.
    */
   public VersionInfo() {
-    try {
-      this.version = Uuid.parse(CURRENT_VERSION);
-    } catch (IOException e) {
-      this.version = null;
-      Logger.getGlobal().log(Level.WARNING, "The current version could not be parsed into a UUID.", e);
-    }
-  private final Uuid version;
+    this(getCurrentVersionUuid());
+  }
 
   /**
    * Creates a new VersionInfo object with the current supported version.
@@ -37,9 +32,6 @@ public class VersionInfo {
    * <p>If the current version string cannot be parsed into a UUID, the version
    * will be a null UUID.
    */
-  public VersionInfo() {
-    this(getCurrentVersionUuid());
-  }
 
   /**
    * Creates a new VersionInfo object with any specific version.
@@ -57,9 +49,6 @@ public class VersionInfo {
   /**
    * Retrieves the stored UUID form of the version.
    */
-  public Uuid getVersion() {
-    return version;
-  }
   
   private static final Uuid getCurrentVersionUuid() {
     try {

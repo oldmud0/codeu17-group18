@@ -24,6 +24,7 @@ import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -156,11 +157,10 @@ final class View implements BasicView {
     }
     return null;
   }
-<<<<<<< HEAD
 
   @Override
   public ServerInfo getInfo() {
-    try (final Connection connection = source.connection()) {
+    try (final Connection connection = this.source.connect()) {
       Serializers.INTEGER.write(connection.out(), NetworkCode.SERVER_INFO_REQUEST);
       if(Serializers.INTEGER.read(connection.in()) == NetworkCode.SERVER_INFO_RESPONSE) {
         final Time startTime = Time.SERIALIZER.read(connection.in());
@@ -173,8 +173,5 @@ final class View implements BasicView {
       LOG.error(ex, "Exception during call on server.");
     }
     return null;
-    }
   }
-=======
->>>>>>> refs/remotes/origin/master
 }
