@@ -25,6 +25,7 @@ import codeu.chat.common.Message;
 import codeu.chat.common.OmniView;
 import codeu.chat.common.SinglesView;
 import codeu.chat.common.User;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.StoreAccessor;
@@ -116,5 +117,10 @@ public final class View implements BasicView, SinglesView, OmniView {
     }
 
     return found;
+  }
+
+  @Override
+  public VersionInfo getVersion() {
+    return new VersionInfo();
   }
 }
