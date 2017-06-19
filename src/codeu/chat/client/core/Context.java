@@ -54,4 +54,8 @@ public final class Context {
   public Info getInfo() {
     return view.getInfo();
   }
+
+  public VersionInfo getVersion() {
+    return view.getVersion();
+  }
 }

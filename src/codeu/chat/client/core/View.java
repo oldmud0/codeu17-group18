@@ -156,6 +156,7 @@ final class View implements BasicView {
     }
     return null;
   }
+<<<<<<< HEAD
 
   @Override
   public ServerInfo getInfo() {
@@ -174,4 +175,6 @@ final class View implements BasicView {
     return null;
     }
   }
+=======
+>>>>>>> refs/remotes/origin/master
 }
