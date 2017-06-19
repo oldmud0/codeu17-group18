@@ -69,7 +69,7 @@ public final class PersistenceTest {
     if (!persistenceFile.exists())
       persistenceFile.createNewFile();
   }
-
+  
   private void createData() {
     final User user = controller.newUser("Test User");
     final ConversationHeader conversation = controller.newConversation("Test Conversation", user.id);

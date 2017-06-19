@@ -86,10 +86,14 @@ public final class Model {
   }
 
   public void add(ConversationHeader conversation) {
+    add(conversation, new ConversationPayload(conversation.id));
+  }
+
+  public void add(ConversationHeader conversation, ConversationPayload payload) {
     conversationById.insert(conversation.id, conversation);
     conversationByTime.insert(conversation.creation, conversation);
     conversationByText.insert(conversation.title, conversation);
-    conversationPayloadById.insert(conversation.id, new ConversationPayload(conversation.id));
+    conversationPayloadById.insert(conversation.id, payload);
   }
 
   public StoreAccessor<Uuid, ConversationHeader> conversationById() {
