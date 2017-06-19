@@ -33,6 +33,7 @@ public class PersistenceWriterRunnable implements Runnable {
   public void run() {
     try {
       writer.write();
+      LOG.verbose("Successfully written to persistence file.");
     } catch (Exception ex) {
       LOG.error(ex, "Exception thrown while writing to persistence file. Data loss may have occurred.");
     }
