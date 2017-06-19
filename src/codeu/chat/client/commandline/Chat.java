@@ -204,6 +204,7 @@ public final class Chat{
     //
     // Print the server's version.
     //
+    /*
     panel.register("version", new Panel.Command() {
       @Override
       public void invoke(Scanner args) {
@@ -215,10 +216,11 @@ public final class Chat{
           }
       }
     });
-
+    */
+    /*
     panel.register("info", new Panel.Command() {
       @Override
-      public void invoke(Scanner args) {
+      public void invoke(List<String> args) {
         final ServerInfo info = context.getInfo();
         if(info == null) {
           System.out.println("ERROR: No info returned");
@@ -227,6 +229,7 @@ public final class Chat{
         }
       }
     });
+    */
 
 
     // VERSION (server version)

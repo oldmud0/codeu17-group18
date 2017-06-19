@@ -160,7 +160,7 @@ final class View implements BasicView {
 
   @Override
   public ServerInfo getInfo() {
-    try (final Connection connection = source.connection()) {
+    try (final Connection connection = this.source.connect()) {
       Serializers.INTEGER.write(connection.out(), NetworkCode.SERVER_INFO_REQUEST);
       if(Serializers.INTEGER.read(connection.in()) == NetworkCode.SERVER_INFO_RESPONSE) {
         final Time startTime = Time.SERIALIZER.read(connection.in());
@@ -173,8 +173,8 @@ final class View implements BasicView {
       LOG.error(ex, "Exception during call on server.");
     }
     return null;
-    }
   }
+}
 
   public VersionInfo getVersion() {
     try (final Connection connection = source.connect()) {
@@ -250,4 +250,3 @@ final class View implements BasicView {
     return null;
   }
 }
-

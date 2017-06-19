@@ -16,7 +16,7 @@ import codeu.chat.util.Uuid;
 public class VersionInfo {
   private static final String CURRENT_VERSION = "1.0.0";
 
-  public final Uuid version;
+  private final Uuid version;
 
   /**
    * Creates a new VersionInfo object with the current supported version.
@@ -27,7 +27,6 @@ public class VersionInfo {
   public VersionInfo() {
     this(getCurrentVersionUuid());
   }
-
 
   /**
    * Creates a new VersionInfo object with any specific version.
