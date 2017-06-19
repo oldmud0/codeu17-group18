@@ -8,4 +8,9 @@ public final class ServerInfo {
 	public ServerInfo(Time startTime) {
 		this.startTime = startTime;
 	}
+	public String toString(){
+		String out = "";
+		out = startTime.toString();
+		return out;
+	}
 }
