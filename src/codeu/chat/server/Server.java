@@ -34,7 +34,6 @@ import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
-import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -67,7 +66,6 @@ public final class Server {
   private Uuid lastSeen = Uuid.NULL;
   
   private final VersionInfo version = new VersionInfo();
-  private static final ServerInfo info = new ServerInfo();
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 
@@ -226,6 +224,7 @@ public final class Server {
             command.onMessage(connection.in(), connection.out());
             LOG.info("Connection accepted");
           }
+
         } catch (Exception ex) {
 
           LOG.error(ex, "Exception while handling connection.");
