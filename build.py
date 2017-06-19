@@ -33,6 +33,8 @@
 #                                        the java class when it runs.
 ###############################################################################
 
+from __future__ import print_function
+
 import os
 import shutil
 import subprocess
@@ -41,13 +43,13 @@ import sys
 
 # Dictionary of settings that control java source compilation
 CONFIG = {
-  'out' : 'bin',
-  'src' : [ 'src', 'test' ],
-  'libraries' : [
+  'out': 'bin',
+  'src': [ 'src', 'test' ],
+  'libraries': [
     'third_party/junit4-4.11.jar',
     'third_party/hamcrest-core-1.3.jar'
   ],
-  'separators' : {
+  'separators': {
     'nt' : ';',
     'posix' : ':'
   }
@@ -58,11 +60,11 @@ CONFIG = {
 #
 # Remove all files from the build output directory.
 #
-def clean(config) :
+def clean(config):
   out = config['out']
 
-  for entry in [ os.path.join(out, name) for name in os.listdir(out) ] :
-    if os.path.isdir(entry) :
+  for entry in [ os.path.join(out, name) for name in os.listdir(out) ]:
+    if os.path.isdir(entry):
       shutil.rmtree(entry)
     else :
       os.remove(entry)
@@ -76,7 +78,7 @@ def clean(config) :
 # files in the source directories, link all specified libraries, and write
 # all output to the out directory.
 #
-def build(config) :
+def build(config):
   libraries = config['libraries']
   out = config['out']
   separator = config['separators'][os.name]
@@ -85,8 +87,8 @@ def build(config) :
   # Find all the java source files in the given source directories.
   # Non-java source files are ignored.
   src_files = [ ]
-  for src_path in src :
-    for root, dirs, files in os.walk(src_path) :
+  for src_path in src:
+    for root, dirs, files in os.walk(src_path):
       src_files += [ os.path.join(root, file) for file in files if file.endswith('.java') ]
 
   # Take everything so far and construct a single command to build the project.
@@ -97,8 +99,8 @@ def build(config) :
   command += [ '-Xlint' ]
   command += src_files
 
-  print('running : %s' % command)
-  print('Build %s' % ('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
+  print('Running: {}'.format(command))
+  print('Build {}'.format('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
 
 
 # RUN
@@ -116,18 +118,18 @@ def run(config, start_class_path, arguments):
   command += [ start_class_path ]
   command += arguments
 
-  print 'Running: [',
-  for x in command :
-    print x,
-  print ']'
-  print('Run %s' % ('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
+  print('Running: [', end=' ')
+  for x in command:
+    print(x, end=' ')
+  print(']')
+  print('Run {}'.format('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
 
 
 # USAGE
 #
 # Print basic usage info.
 #
-def usage() :
+def usage():
   print('Usage: python build.py clean | build | rebuild | run | help')
   print('  clean   : Remove all files in the output directory.')
   print('            This does not remove the root of the output tree.')
@@ -141,34 +143,34 @@ def usage() :
 
 
 # MAIN
-def main(args) :
-  if len(args) > 1 :
+def main(args):
+  if len(args) > 1:
     command = args[1]
-    if 'help' == command :
+    if 'help' == command:
       usage()
-    elif 'clean' == command :
+    elif 'clean' == command:
       clean(CONFIG)
-    elif 'build' == command :
+    elif 'build' == command:
       build(CONFIG)
-    elif 'rebuild' == command :
+    elif 'rebuild' == command:
       clean(CONFIG)
       build(CONFIG)
-    elif 'run' == command :
-      if len(args) > 2 :
+    elif 'run' == command:
+      if len(args) > 2:
         java_class = args[2]
         java_params = args[3:]
         run(CONFIG, java_class, java_params)
-      else :
+      else:
         print('Run command requires a java class to run.')
-        usage();
-    else :
-      print 'Unknown command: [',
-      for x in args :
-        print x,
-      print ']'
-      usage();
-  else :
-    print ('No parameters provided.')
+        usage()
+    else:
+      print('Unknown command: [', end=' ')
+      for x in args:
+        print(x, end=' ')
+      print(']')
+      usage()
+  else:
+    print('No parameters provided.')
     usage()
 
 
