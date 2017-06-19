@@ -10,7 +10,7 @@ import codeu.chat.common.User;
 import codeu.chat.util.Uuid;
 
 public interface PersistenceFileSkeleton {
-  public interface ServerInfo {
+  public interface ServerInfo {	  
     @JsonProperty("uuid")
     Uuid id();
 

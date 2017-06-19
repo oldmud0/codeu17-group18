@@ -30,6 +30,7 @@ public class PersistenceReader {
 	JsonReader reader;
 	GsonBuilder gsonBuilder;
 	Gson gson;
+	
 
 	public PersistenceReader(File persistenceFile) {
 		gsonBuilder = new GsonBuilder();
@@ -40,10 +41,15 @@ public class PersistenceReader {
 			.registerTypeAdapter(Message.class, new MessageDeserializer())
 			.registerTypeAdapter(User.class, new UserDeserializer());
 		gson = gsonBuilder.create();
+		try {
+			reader = gson.newJsonReader(new FileReader(persistenceFile));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void read() throws IOException {
-
+		
 	}
 
 	private class ServerInfoDeserializer implements JsonDeserializer<ServerInfo> {
@@ -87,8 +93,8 @@ public class PersistenceReader {
 			
 			final Uuid convoId = new Uuid(id);
 			final Uuid ownerId = new Uuid(owner);
-			//private method, change to public?
-			final Time convoTime = new Time(time);
+			//private method, changed to public
+			final Time convoTime = Time.fromMs(time);
 			
 			final ConversationHeader convoResult = new ConversationHeader(convoId, ownerId, convoTime, title);					
 			return convoResult;
@@ -132,7 +138,7 @@ public class PersistenceReader {
 			final Uuid messageId = new Uuid(id);
 			final Uuid nextId = new Uuid(next);
 			final Uuid prevId = new Uuid(previous);
-			final Time messageTime = new Time(time);
+			final Time messageTime = Time.fromMs(time);
 			final Uuid authorId = new Uuid(author);
 			
 			final Message messageResult = new Message(messageId, nextId, prevId, messageTime, authorId, content);		
@@ -152,7 +158,7 @@ public class PersistenceReader {
 			final long time = jsonObject.get("creation").getAsLong();
 			
 			final Uuid userId = new Uuid(id);
-			final Time userTime = new Time(time);
+			final Time userTime = Time.fromMs(time);
 			
 			final User userResult = new User(userId, name, userTime);
 			return userResult;

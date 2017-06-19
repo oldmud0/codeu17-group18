@@ -21,6 +21,7 @@ import java.io.File;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.server.NoOpRelay;
+import codeu.chat.server.PersistenceReader;
 import codeu.chat.server.PersistenceWriter;
 import codeu.chat.server.RemoteRelay;
 import codeu.chat.server.Server;
@@ -116,6 +117,7 @@ final class ServerMain {
         LOG.info("Persistence file was found. Loading the snapshot...");
         // Persistence file couldn't be created because one already exists.
         // Read the file. (TODO)
+        PersistenceReader reader = new PersistenceReader(persistenceFile);
       } else {
         LOG.info("Persistence file was not found. A blank one has been created.");
       }
