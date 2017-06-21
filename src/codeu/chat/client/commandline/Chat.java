@@ -199,20 +199,21 @@ public final class Chat {
     //
     // Print the server's version.
     //
-    /*
+    
     panel.register("version", new Panel.Command() {
       @Override
-      public void invoke(Scanner args) {
+      public void invoke(List<String> args) {
           final VersionInfo version = context.getVersion();
           if (version == null) {
-            if (version == null || version.getVersion().equals(Uuid.NULL)) {
-            System.out.println("ERROR: No version returned");
-          } else {
-            System.out.format("Server version: %s\n", version);
+              System.out.println("ERROR: No version returned");
+          }
+          else {
+              System.out.format("Server version: %s\n", version.toString());
           }
       }
     });
-    */
+    
+    
     
     panel.register("serverinfo", new Panel.Command() {
       @Override

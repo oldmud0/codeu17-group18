@@ -44,6 +44,7 @@ public final class View implements BasicView, SinglesView {
 
   private final static Logger.Log LOG = Logger.newLog(View.class);
   private static final ServerInfo info = new ServerInfo();
+  private static final VersionInfo version = new VersionInfo();
 
   private final Model model;
 
@@ -116,7 +117,7 @@ public final class View implements BasicView, SinglesView {
 
   @Override
   public VersionInfo getVersion() {
-    return new VersionInfo();
+    return version;
   }
 
   @Override
