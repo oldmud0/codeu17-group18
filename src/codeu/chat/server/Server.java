@@ -181,7 +181,7 @@ public final class Server {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
-        Uuid.SERIALIZER.write(out, version.getVersion());
+        Uuid.SERIALIZER.write(out, view.getVersion().version);
       }
     });
 
@@ -192,6 +192,7 @@ public final class Server {
         Time.SERIALIZER.write(out, view.getInfo().startTime);
       }
     });
+
 
     this.timeline.scheduleNow(new Runnable() {
       @Override
