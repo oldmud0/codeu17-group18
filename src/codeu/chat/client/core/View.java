@@ -146,7 +146,8 @@ final class View implements BasicView {
       Serializers.INTEGER.write(connection.out(), NetworkCode.GET_SERVER_VERSION_REQUEST);
 
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_SERVER_VERSION_RESPONSE) {
-        return new VersionInfo(Uuid.SERIALIZER.read(connection.in()));
+        final Uuid version = Uuid.SERIALIZER.read(connection.in());
+        return new VersionInfo(version);
       } else {
         LOG.error("Response from server failed.");
       }
