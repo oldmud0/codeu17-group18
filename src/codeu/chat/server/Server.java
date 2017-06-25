@@ -34,6 +34,7 @@ import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -68,6 +69,7 @@ public final class Server {
   private Uuid lastSeen = Uuid.NULL;
 
   private final VersionInfo version = new VersionInfo();
+  private static final ServerInfo info = new ServerInfo();
 
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
@@ -125,7 +127,7 @@ public final class Server {
         // user that we put in as a key
         final Uuid owner = Uuid.SERIALIZER.read(in);
         userInterests.get(owner).addModifiedConversation(title);
-        userInterests.get(owner).addInterestConvo(title);
+      //  userInterests.get(owner).addInterestConvo(title);
         final ConversationHeader conversation = controller.newConversation(title, owner);
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
@@ -205,12 +207,9 @@ public final class Server {
     this.commands.put(NetworkCode.NEW_USER_INTEREST_REQUEST,  new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        // name of interest to be added
-        final String name = Serializers.STRING.read(in);
-        // signed in user
-        final Uuid owner = Uuid.SERIALIZER.read(in);
-        userInterests.get(name).addInterestUser(owner);
-
+        final String interestName = Serializers.STRING.read(in);
+        final Uuid signedInUser = Uuid.SERIALIZER.read(in);
+        userInterests.get(signedInUser).addInterestUser(interestName);
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_INTEREST_RESPONSE);
         //Serializers.nullable(User.SERIALIZER).write(out, user);
       }
@@ -233,6 +232,7 @@ public final class Server {
     this.commands.put(NetworkCode.GET_CONVO_STATUS_UPDATE_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
+        // TODO: implement
         Serializers.INTEGER.write(out, NetworkCode.GET_CONVO_STATUS_UPDATE_RESPONSE);
 
       }
@@ -241,9 +241,19 @@ public final class Server {
     this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        final Uuid owner = Uuid.SERIALIZER.read(in);
+        final Uuid signedInUser = Uuid.SERIALIZER.read(in);
+        // TODO: implement
+        //for each element in interested users for the signed in user, print out getModifiedConvos()
         Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
-        InterestInfo.SERIALIZER.write(out, userInterests.get(owner));
+        InterestInfo.SERIALIZER.write(out, userInterests.get(signedInUser));
+      }
+    });
+
+    this.commands.put(NetworkCode.SERVER_INFO_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
+        Time.SERIALIZER.write(out, view.getInfo().startTime);
       }
     });
 
@@ -288,7 +298,6 @@ public final class Server {
             command.onMessage(connection.in(), connection.out());
             LOG.info("Connection accepted");
           }
-
         } catch (Exception ex) {
 
           LOG.error(ex, "Exception while handling connection.");

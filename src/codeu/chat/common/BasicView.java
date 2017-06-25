@@ -21,6 +21,7 @@ import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
 import codeu.chat.util.Uuid;
+import codeu.chat.util.ServerInfo;
 
 // BASIC VIEW
 //
@@ -54,7 +55,9 @@ public interface BasicView {
 
   // GET VERSION
   //
+  //   Return the server's version.
   //   Return the server's version, or a null UUID if unavailable.
   VersionInfo getVersion();
+  ServerInfo getInfo();
 
 }
