@@ -15,6 +15,7 @@
 
 package codeu.chat.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,8 +34,8 @@ import codeu.chat.common.NetworkCode;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
+import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.common.VersionInfo;
-import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -67,9 +68,11 @@ public final class Server {
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
+ 
+  private PersistenceWriter persistenceWriter; // Not final, as it is not required
 
   private final VersionInfo version = new VersionInfo();
-  private static final ServerInfo info = new ServerInfo();
+  private static final codeu.chat.util.ServerInfo info = new codeu.chat.util.ServerInfo();
 
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
@@ -192,7 +195,7 @@ public final class Server {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
-        Uuid.SERIALIZER.write(out, version.getVersion());
+        Uuid.SERIALIZER.write(out, view.getVersion().version);
       }
     });
 
@@ -257,12 +260,13 @@ public final class Server {
       }
     });
 
+
     this.timeline.scheduleNow(new Runnable() {
       @Override
       public void run() {
         try {
 
-          LOG.info("Reading update from relay...");
+          LOG.verbose("Reading update from relay...");
 
           for (final Relay.Bundle bundle : relay.read(id, secret, lastSeen, 32)) {
             onBundle(bundle);
@@ -279,6 +283,60 @@ public final class Server {
       }
     });
   }
+  
+  public Server(final Uuid id, final Secret secret, final Relay relay, final File persistenceFile) {
+    this(id, secret, relay);
+    
+    this.persistenceWriter = new PersistenceWriter(persistenceFile, view, new ServerInfo() {
+
+      @Override
+      public Uuid id() {
+        return id;
+      }
+
+      @Override
+      public Secret secret() {
+        return secret;
+      }
+
+      @Override
+      public Uuid lastSeen() {
+        return lastSeen;
+      }
+
+      @Override
+      public VersionInfo version() {
+        return version;
+      }
+
+    });
+    
+    this.timeline.scheduleIn(PersistenceWriterRunnable.WRITE_INTERVAL_MS,
+        new PersistenceWriterRunnable(persistenceWriter, timeline));
+  }
+  
+  public Server(final PersistenceFileSkeleton container, final Relay relay, final File persistenceFile) {
+    this(container.serverInfo().id(), container.serverInfo().secret(), relay, persistenceFile);
+    lastSeen = container.serverInfo().lastSeen();
+    // XXX: version is not written!
+    adaptToModel(container);
+  }
+
+  private void adaptToModel(PersistenceFileSkeleton container) {
+    for (User user : container.users().values()) {
+      model.add(user);
+    }
+
+    Map<Uuid, ConversationPayload> payloads = container.conversationPayloads();
+    for (ConversationHeader conv : container.conversationHeaders().values()) {
+      ConversationPayload payload = payloads.get(conv.id);
+      model.add(conv, payload);
+    }
+
+    for (Message msg : container.messages().values()) {
+      model.add(msg);
+    }
+  }
 
   public void handleConnection(final Connection connection) {
     timeline.scheduleNow(new Runnable() {
@@ -290,6 +348,7 @@ public final class Server {
 
           final int type = Serializers.INTEGER.read(connection.in());
           final Command command = commands.get(type);
+
           if (command == null) {
             // The message type cannot be handled so return a dummy message.
             Serializers.INTEGER.write(connection.out(), NetworkCode.NO_MESSAGE);

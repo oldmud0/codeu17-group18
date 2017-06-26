@@ -15,35 +15,27 @@
 package codeu.chat.server;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 import codeu.chat.common.BasicView;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
+import codeu.chat.common.OmniView;
 import codeu.chat.common.SinglesView;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
-import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.StoreAccessor;
 
-public final class View implements BasicView, SinglesView {
+public final class View implements BasicView, SinglesView, OmniView {
 
   private final static Logger.Log LOG = Logger.newLog(View.class);
   private static final ServerInfo info = new ServerInfo();
+  private static final VersionInfo version = new VersionInfo();
 
   private final Model model;
 
@@ -62,8 +54,18 @@ public final class View implements BasicView, SinglesView {
   }
 
   @Override
+  public Collection<ConversationPayload> getConversationPayloads() {
+    return all(model.conversationPayloadById());
+  }
+
+  @Override
   public Collection<ConversationPayload> getConversationPayloads(Collection<Uuid> ids) {
     return intersect(model.conversationPayloadById(), ids);
+  }
+
+  @Override
+  public Collection<Message> getMessages() {
+    return all(model.messageById());
   }
 
   @Override
@@ -72,20 +74,26 @@ public final class View implements BasicView, SinglesView {
   }
 
   @Override
-  public User findUser(Uuid id) { return model.userById().first(id); }
+  public User findUser(Uuid id) {
+    return model.userById().first(id);
+  }
 
   @Override
-  public ConversationHeader findConversation(Uuid id) { return model.conversationById().first(id); }
+  public ConversationHeader findConversation(Uuid id) {
+    return model.conversationById().first(id);
+  }
 
   @Override
-  public Message findMessage(Uuid id) { return model.messageById().first(id); }
+  public Message findMessage(Uuid id) {
+    return model.messageById().first(id);
+  }
 
-  private static <S,T> Collection<T> all(StoreAccessor<S,T> store) {
+  private static <S, T> Collection<T> all(StoreAccessor<S, T> store) {
 
     final Collection<T> all = new ArrayList<>();
 
     for (final T value : store.all()) {
-        all.add(value);
+      all.add(value);
     }
 
     return all;
@@ -116,7 +124,7 @@ public final class View implements BasicView, SinglesView {
 
   @Override
   public VersionInfo getVersion() {
-    return new VersionInfo();
+    return version;
   }
 
   @Override

@@ -1,5 +1,5 @@
 bin/
 *.log
 .project
-.classpath
-.settings/
+storage_test/
+*.lck
