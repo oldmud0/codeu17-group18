@@ -276,6 +276,7 @@ public final class Chat {
           } else {
             System.out.format("Server version: %s\n", version);
           }
+        }
       }
     });
 
