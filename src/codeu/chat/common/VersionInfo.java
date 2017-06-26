@@ -46,14 +46,7 @@ public class VersionInfo {
     return version;
   }
   
-  public String toString(){
-    String out = "";
-    out = version.toString();
-    return out;
-  }
-  //Retrieves the stored UUID form of the version.
-
-  
+  //Retrieves the stored UUID form of the version.  
   private static final Uuid getCurrentVersionUuid() {
     try {
       return Uuid.parse(CURRENT_VERSION);
