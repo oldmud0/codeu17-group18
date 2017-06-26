@@ -15,13 +15,14 @@
 
 package codeu.chat.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +35,8 @@ import codeu.chat.common.NetworkCode;
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
-import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -58,7 +59,7 @@ public final class Server {
 
   private final Map<Integer, Command> commands = new HashMap<>();
   //all the users in the chat app and their interest info
-  private  Map<Uuid, InterestInfo> userInterests = new HashMap<>();
+  private  Map<User, InterestInfo> userInterests = new HashMap<>();
   private final Uuid id;
   private final Secret secret;
 
@@ -68,11 +69,9 @@ public final class Server {
 
   private final Relay relay;
   private Uuid lastSeen = Uuid.NULL;
- 
-  private PersistenceWriter persistenceWriter; // Not final, as it is not required
 
   private final VersionInfo version = new VersionInfo();
-  private static final codeu.chat.util.ServerInfo info = new codeu.chat.util.ServerInfo();
+  private static final ServerInfo info = new ServerInfo();
 
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
@@ -88,13 +87,14 @@ public final class Server {
       public void onMessage(InputStream in, OutputStream out) throws IOException {
 
         final Uuid author = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(author);
         final Uuid conversation = Uuid.SERIALIZER.read(in);
         final String content = Serializers.STRING.read(in);
         ConversationHeader convo = view.findConversation(conversation);
         // for user status update
-        userInterests.get(author).addModifiedConversation(convo.title);
+        userInterests.get(signedInUser).addModifiedConversation(convo.title);
         // for convo status update
-        userInterests.get(author).addToMessageCount(convo.title);
+        userInterests.get(signedInUser).addToMessageCount(convo.title);
         final Message message = controller.newMessage(author, conversation, content);
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
@@ -114,7 +114,7 @@ public final class Server {
 
         final String name = Serializers.STRING.read(in);
         final User user = controller.newUser(name);
-        userInterests.put(user.id, new InterestInfo());
+        userInterests.put(user, new InterestInfo());
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
         Serializers.nullable(User.SERIALIZER).write(out, user);
@@ -129,7 +129,8 @@ public final class Server {
         final String title = Serializers.STRING.read(in);
         // user that we put in as a key
         final Uuid owner = Uuid.SERIALIZER.read(in);
-        userInterests.get(owner).addModifiedConversation(title);
+        User signedInUser = view.findUser(owner);
+        userInterests.get(signedInUser).addModifiedConversation(title);
       //  userInterests.get(owner).addInterestConvo(title);
         final ConversationHeader conversation = controller.newConversation(title, owner);
 
@@ -199,20 +200,19 @@ public final class Server {
       }
     });
 
-    this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
-      @Override
-      public void onMessage(InputStream in, OutputStream out) throws IOException {
-        Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
-        Uuid.SERIALIZER.write(out, version.getVersion());
-      }
-    });
-
     this.commands.put(NetworkCode.NEW_USER_INTEREST_REQUEST,  new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         final String interestName = Serializers.STRING.read(in);
-        final Uuid signedInUser = Uuid.SERIALIZER.read(in);
-        userInterests.get(signedInUser).addInterestUser(interestName);
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(signedInId);
+        User interest = null;
+        for(User temp : userInterests.keySet()) {
+          if(temp.name == interestName) {
+            interest = temp;
+          }
+        }
+        userInterests.get(signedInUser).addInterestUser(interest.id);
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_INTEREST_RESPONSE);
         //Serializers.nullable(User.SERIALIZER).write(out, user);
       }
@@ -244,11 +244,19 @@ public final class Server {
     this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        final Uuid signedInUser = Uuid.SERIALIZER.read(in);
-        // TODO: implement
-        //for each element in interested users for the signed in user, print out getModifiedConvos()
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(signedInId);
         Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
-        InterestInfo.SERIALIZER.write(out, userInterests.get(signedInUser));
+        List<String> allConvos = new ArrayList<String>();
+        for(Uuid interestId : userInterests.get(signedInUser).getInterestedUserIds()) {
+          User interestUser = view.findUser(interestId);
+          allConvos.add(userInterests.get(interestUser).getModifiedConvos());
+        }
+
+      //  String makeString = String.join(", ", allConvos);
+      //  Serializers.STRING.write(out, allConvos.toString());
+      Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
+      Serializers.STRING.write(out, "hello world");
       }
     });
 
@@ -266,7 +274,7 @@ public final class Server {
       public void run() {
         try {
 
-          LOG.verbose("Reading update from relay...");
+          LOG.info("Reading update from relay...");
 
           for (final Relay.Bundle bundle : relay.read(id, secret, lastSeen, 32)) {
             onBundle(bundle);
@@ -283,60 +291,6 @@ public final class Server {
       }
     });
   }
-  
-  public Server(final Uuid id, final Secret secret, final Relay relay, final File persistenceFile) {
-    this(id, secret, relay);
-    
-    this.persistenceWriter = new PersistenceWriter(persistenceFile, view, new ServerInfo() {
-
-      @Override
-      public Uuid id() {
-        return id;
-      }
-
-      @Override
-      public Secret secret() {
-        return secret;
-      }
-
-      @Override
-      public Uuid lastSeen() {
-        return lastSeen;
-      }
-
-      @Override
-      public VersionInfo version() {
-        return version;
-      }
-
-    });
-    
-    this.timeline.scheduleIn(PersistenceWriterRunnable.WRITE_INTERVAL_MS,
-        new PersistenceWriterRunnable(persistenceWriter, timeline));
-  }
-  
-  public Server(final PersistenceFileSkeleton container, final Relay relay, final File persistenceFile) {
-    this(container.serverInfo().id(), container.serverInfo().secret(), relay, persistenceFile);
-    lastSeen = container.serverInfo().lastSeen();
-    // XXX: version is not written!
-    adaptToModel(container);
-  }
-
-  private void adaptToModel(PersistenceFileSkeleton container) {
-    for (User user : container.users().values()) {
-      model.add(user);
-    }
-
-    Map<Uuid, ConversationPayload> payloads = container.conversationPayloads();
-    for (ConversationHeader conv : container.conversationHeaders().values()) {
-      ConversationPayload payload = payloads.get(conv.id);
-      model.add(conv, payload);
-    }
-
-    for (Message msg : container.messages().values()) {
-      model.add(msg);
-    }
-  }
 
   public void handleConnection(final Connection connection) {
     timeline.scheduleNow(new Runnable() {
@@ -348,7 +302,6 @@ public final class Server {
 
           final int type = Serializers.INTEGER.read(connection.in());
           final Command command = commands.get(type);
-
           if (command == null) {
             // The message type cannot be handled so return a dummy message.
             Serializers.INTEGER.write(connection.out(), NetworkCode.NO_MESSAGE);

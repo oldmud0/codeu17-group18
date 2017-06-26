@@ -47,7 +47,7 @@ public final class Context {
     }
     return users;
   }
-  
+
   public VersionInfo getVersion() {
     return view.getVersion();
   }
@@ -56,4 +56,7 @@ public final class Context {
     return view.getInfo();
   }
 
+  public String getAllConvosFromServer() {
+    return view.getAllConvosFromServer();
+  }
 }
