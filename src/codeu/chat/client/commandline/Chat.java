@@ -19,7 +19,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Stack;
-
+import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.ArrayList;
+import java.io.IOException;
+import java.util.Iterator;
 import codeu.chat.client.core.Context;
 import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
@@ -28,6 +33,7 @@ import codeu.chat.common.VersionInfo;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
+import codeu.chat.util.InterestInfo;
 
 public final class Chat {
 
@@ -75,7 +81,6 @@ public final class Chat {
       // the command was handled
       return true;
     }
-
     // If we get to here it means that the command was not correctly handled
     // so we should let the user know. Still return true as we want to continue
     // processing future commands.
@@ -110,8 +115,15 @@ public final class Chat {
         System.out.println("    List all users.");
         System.out.println("  u-add <name>");
         System.out.println("    Add a new user with the given name.");
+        System.out.println("  u-add-interest <name>");
+        System.out.println("    Adds the user with given name to interest system.");
+        System.out.println("  u-remove-interest <name>");
+        System.out.println("    Removes the user with given name in interest system.");
         System.out.println("  u-sign-in <name>");
         System.out.println("    Sign in as the user with the given name.");
+        System.out.println("  u-status-update <name>");
+        System.out.print("      Lists creates conversations and conversations");
+        System.out.println(" that users have added messages to.");
         System.out.println("  version");
         System.out.println("    Print the server version.");
         System.out.println("  exit");
@@ -155,6 +167,62 @@ public final class Chat {
       }
     });
 
+    //U-ADD-INTEREST
+    //
+    // Adds the specified user to the user's interest system
+    panel.register("u-add-interest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        final UserContext user = findUser(name);
+        System.out.println(user.user.id);
+      }
+
+      // Find the first user with the given name and return a user context
+      // for that user. If no user is found, the function will return null.
+      private UserContext findUser(String name) {
+        for (final UserContext user : context.allUsers()) {
+          if (user.user.name.equals(name)) {
+            return user;
+          }
+        }
+        return null;
+      }
+    });
+
+
+    //U-REMOVE-INTEREST
+    //
+    // Removes the specified user in the user's interest system
+    panel.register("u-remove-interest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        final UserContext user = findUser(name);
+
+      }
+
+      // Find the first user with the given name and return a user context
+      // for that user. If no user is found, the function will return null.
+      private UserContext findUser(String name) {
+        for (final UserContext user : context.allUsers()) {
+          if (user.user.name.equals(name)) {
+            return user;
+          }
+        }
+        return null;
+      }
+    });
+
+    //TODO: implement
+    panel.register("u-status-update", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        //final ConversationContext conversation = find(name);
+
+      }
+    });
     // U-SIGN-IN (sign in user)
     //
     // Add a command to sign-in as a user when the user enters "u-sign-in"
@@ -188,26 +256,11 @@ public final class Chat {
       }
     });
 
+
     // VERSION (server version)
     //
     // Print the server's version.
     //
-    
-    panel.register("version", new Panel.Command() {
-      @Override
-      public void invoke(Scanner args) {
-          final VersionInfo version = context.getVersion();
-          if (version == null) {
-              System.out.println("ERROR: No version returned");
-          }
-          else {
-              System.out.format("Server version: %s\n", version.toString());
-          }
-      }
-    });
-    
-    
-    
     panel.register("serverinfo", new Panel.Command() {
       @Override
       public void invoke(Scanner args) {
@@ -219,12 +272,12 @@ public final class Chat {
         }
       }
     });
-    
 
     // Now that the panel has all its commands registered, return the panel
     // so that it can be used.
     return panel;
   }
+
 
   private Panel createUserPanel(final UserContext user) {
 
@@ -243,8 +296,14 @@ public final class Chat {
         System.out.println("    List all conversations that the current user can interact with.");
         System.out.println("  c-add <title>");
         System.out.println("    Add a new conversation with the given title and join it as the current user.");
+        System.out.println("  c-add-interest <title>");
+        System.out.println("    Add this conversation with the given title to user's interest system.");
+        System.out.println("  c-remove-interest <title>");
+        System.out.println("    Remove this conversation with the given title in user's interest system.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
+        System.out.println("  c-status-update <title>");
+        System.out.println("      Prints how many messages has been added since last update.");
         System.out.println("  info");
         System.out.println("    Display all info for the current user");
         System.out.println("  back");
@@ -293,11 +352,52 @@ public final class Chat {
       }
     });
 
-    // C-JOIN (join conversation)
+    //C-ADD-INTEREST (add conversation to intererst)
     //
+    //Add this conversation to the user's interest system
+    panel.register("c-add-interest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        final ConversationContext conversation = find(name);
+      }
+
+      // Find the first conversation with the given name and return its context.
+      // If no conversation has the given name, this will return null.
+      private ConversationContext find(String title) {
+        for (final ConversationContext conversation : user.conversations()) {
+          if (title.equals(conversation.conversation.title)) {
+            return conversation;
+          }
+        }
+        return null;
+      }
+    });
+
+    // C-REMOVE-INTEREST (removes conversation in intererst)
+    //
+    // Add this conversation to the user's interest system
+    panel.register("c-remove-interest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        final ConversationContext conversation = find(name);
+        }
+
+        private ConversationContext find(String title) {
+          for (final ConversationContext conversation : user.conversations()) {
+            if (title.equals(conversation.conversation.title)) {
+              return conversation;
+            }
+          }
+          return null;
+        }
+    });
+
+    //C-JOIN (join conversation)
+
     // Add a command that will joing a conversation when the user enters
     // "c-join" while on the user panel.
-    //
     panel.register("c-join", new Panel.Command() {
       @Override
       public void invoke(Scanner args) {
@@ -312,6 +412,26 @@ public final class Chat {
         } else {
           System.out.println("ERROR: Missing <title>");
         }
+      }
+
+      // Find the first conversation with the given name and return its context.
+      // If no conversation has the given name, this will return null.
+      private ConversationContext find(String title) {
+        for (final ConversationContext conversation : user.conversations()) {
+          if (title.equals(conversation.conversation.title)) {
+            return conversation;
+          }
+        }
+        return null;
+      }
+    });
+
+    panel.register("c-status-update", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        final ConversationContext conversation = find(name);
+
       }
 
       // Find the first conversation with the given name and return its context.
