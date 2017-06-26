@@ -26,6 +26,7 @@ import codeu.chat.common.OmniView;
 import codeu.chat.common.SinglesView;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.StoreAccessor;
@@ -33,6 +34,8 @@ import codeu.chat.util.store.StoreAccessor;
 public final class View implements BasicView, SinglesView, OmniView {
 
   private final static Logger.Log LOG = Logger.newLog(View.class);
+  private static final ServerInfo info = new ServerInfo();
+  private static final VersionInfo version = new VersionInfo();
 
   private final Model model;
 
@@ -121,6 +124,11 @@ public final class View implements BasicView, SinglesView, OmniView {
 
   @Override
   public VersionInfo getVersion() {
-    return new VersionInfo();
+    return version;
+  }
+
+  @Override
+  public ServerInfo getInfo() {
+    return info;
   }
 }

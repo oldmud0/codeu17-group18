@@ -36,6 +36,7 @@ import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -70,6 +71,7 @@ public final class Server {
   private PersistenceWriter persistenceWriter; // Not final, as it is not required
 
   private final VersionInfo version = new VersionInfo();
+  private static final ServerInfo info = new ServerInfo();
 
   public Server(final Uuid id, final Secret secret, final Relay relay) {
 
@@ -183,9 +185,18 @@ public final class Server {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
-        Uuid.SERIALIZER.write(out, version.getVersion());
+        Uuid.SERIALIZER.write(out, view.getVersion().version);
       }
     });
+
+    this.commands.put(NetworkCode.SERVER_INFO_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
+        Time.SERIALIZER.write(out, view.getInfo().startTime);
+      }
+    });
+
 
     this.timeline.scheduleNow(new Runnable() {
       @Override
@@ -283,7 +294,6 @@ public final class Server {
             command.onMessage(connection.in(), connection.out());
             LOG.info("Connection accepted");
           }
-
         } catch (Exception ex) {
 
           LOG.error(ex, "Exception while handling connection.");

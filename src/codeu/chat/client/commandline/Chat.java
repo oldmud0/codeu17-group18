@@ -24,6 +24,9 @@ import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.util.Tokenizer;
+import codeu.chat.util.ServerInfo;
+import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 
 public final class Chat {
@@ -189,17 +192,34 @@ public final class Chat {
     //
     // Print the server's version.
     //
+    
     panel.register("version", new Panel.Command() {
       @Override
-      public void invoke(Scanner args) {
+      public void invoke(List<String> args) {
           final VersionInfo version = context.getVersion();
-          if (version == null || version.getVersion().equals(Uuid.NULL)) {
-            System.out.println("ERROR: No version returned");
-          } else {
-            System.out.format("Server version: %s\n", version);
+          if (version == null) {
+              System.out.println("ERROR: No version returned");
+          }
+          else {
+              System.out.format("Server version: %s\n", version.toString());
           }
       }
     });
+    
+    
+    
+    panel.register("serverinfo", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final ServerInfo info = context.getInfo();
+        if(info == null) {
+          System.out.println("ERROR: No info returned");
+        } else {
+          System.out.format("Server info: %s\n", info.toString());
+        }
+      }
+    });
+    
 
     // Now that the panel has all its commands registered, return the panel
     // so that it can be used.
