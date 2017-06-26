@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.io.IOException;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Iterator;
-
-import codeu.chat.common.User;
 import codeu.chat.client.core.Context;
 import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
@@ -37,8 +37,7 @@ import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.InterestInfo;
 
-
-public final class Chat{
+public final class Chat {
 
   // PANELS
   //
@@ -84,7 +83,7 @@ public final class Chat{
       return true;
     }
 
-    if (panels.peek().handleCommand(command, args)) {
+    if (panels.peek().handleCommand(command, tokens)) {
       // the command was handled
       return true;
     }
@@ -122,8 +121,15 @@ public final class Chat{
         System.out.println("    List all users.");
         System.out.println("  u-add <name>");
         System.out.println("    Add a new user with the given name.");
+        System.out.println("  u-add-interest <name>");
+        System.out.println("    Adds the user with given name to interest system.");
+        System.out.println("  u-remove-interest <name>");
+        System.out.println("    Removes the user with given name in interest system.");
         System.out.println("  u-sign-in <name>");
         System.out.println("    Sign in as the user with the given name.");
+        System.out.println("  u-status-update <name>");
+        System.out.print("      Lists creates conversations and conversations");
+        System.out.println(" that users have added messages to.");
         System.out.println("  version");
         System.out.println("    Print the server version.");
         System.out.println("  exit");
@@ -167,6 +173,62 @@ public final class Chat{
       }
     });
 
+    //U-ADD-INTEREST
+    //
+    // Adds the specified user to the user's interest system
+    panel.register("u-add-interest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        final UserContext user = findUser(name);
+        System.out.println(user.user.id);
+      }
+
+      // Find the first user with the given name and return a user context
+      // for that user. If no user is found, the function will return null.
+      private UserContext findUser(String name) {
+        for (final UserContext user : context.allUsers()) {
+          if (user.user.name.equals(name)) {
+            return user;
+          }
+        }
+        return null;
+      }
+    });
+
+
+    //U-REMOVE-INTEREST
+    //
+    // Removes the specified user in the user's interest system
+    panel.register("u-remove-interest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        final UserContext user = findUser(name);
+
+      }
+
+      // Find the first user with the given name and return a user context
+      // for that user. If no user is found, the function will return null.
+      private UserContext findUser(String name) {
+        for (final UserContext user : context.allUsers()) {
+          if (user.user.name.equals(name)) {
+            return user;
+          }
+        }
+        return null;
+      }
+    });
+
+    //TODO: implement
+    panel.register("u-status-update", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        //final ConversationContext conversation = find(name);
+
+      }
+    });
     // U-SIGN-IN (sign in user)
     //
     // Add a command to sign-in as a user when the user enters "u-sign-in"
@@ -200,39 +262,6 @@ public final class Chat{
       }
     });
 
-    // VERSION (server version)
-    //
-    // Print the server's version.
-    //
-    
-    panel.register("version", new Panel.Command() {
-      @Override
-      public void invoke(Scanner args) {
-          final VersionInfo version = context.getVersion();
-          if (version == null) {
-              System.out.println("ERROR: No version returned");
-          }
-          else {
-              System.out.format("Server version: %s\n", version.toString());
-          }
-      }
-    });
-    
-    
-    
-    panel.register("serverinfo", new Panel.Command() {
-      @Override
-      public void invoke(Scanner args) {
-        final ServerInfo info = context.getInfo();
-        if(info == null) {
-          System.out.println("ERROR: No info returned");
-        } else {
-          System.out.format("Server info: %s\n", info.toString());
-        }
-      }
-    });
-    
-
 
     // VERSION (server version)
     //
@@ -261,7 +290,6 @@ public final class Chat{
         }
       }
     });
-
 
     // Now that the panel has all its commands registered, return the panel
     // so that it can be used.
@@ -293,8 +321,6 @@ public final class Chat{
         System.out.println("    Add this conversation with the given title to user's interest system.");
         System.out.println("  c-remove-userInterest <name>");
         System.out.println("    Remove this user with the given name from user's interest system.");
-        System.out.println("  c-remove-convoInterest <title>");
-        System.out.println("    Remove this conversation with the given title from user's interest system.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
         System.out.println("  c-convo-statusUpdate");
@@ -407,9 +433,10 @@ public final class Chat{
       }
     });
 
-    //C-ADD-INTEREST (add conversation to interest)
+    //C-ADD-INTEREST (add conversation to intererst)
     //
     //Add this conversation to the user's interest system
+
 
     // C-REMOVE-INTEREST (removes conversation in intererst)
     //
@@ -504,6 +531,7 @@ public final class Chat{
         return null;
       }
     });
+
     // INFO
     //
     // Add a command that will print info about the current context when the

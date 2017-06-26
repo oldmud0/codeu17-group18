@@ -85,5 +85,3 @@ public final class Tokenizer {
     return c;
   }
 }
-
-
