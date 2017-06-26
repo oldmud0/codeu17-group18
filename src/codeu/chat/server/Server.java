@@ -212,7 +212,7 @@ public final class Server {
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         final String interestName = Serializers.STRING.read(in);
         final Uuid signedInUser = Uuid.SERIALIZER.read(in);
-        userInterests.get(signedInUser).addInterestUser(interestName);
+        userInterests.get(signedInUser).addInterestUser(Uuid.parse(interestName));
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_INTEREST_RESPONSE);
         //Serializers.nullable(User.SERIALIZER).write(out, user);
       }
