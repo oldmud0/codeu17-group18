@@ -135,7 +135,7 @@ public final class Chat {
 				System.out.println("  u-status-update <name>");
 				System.out.print("      Lists creates conversations and conversations");
 				System.out.println(" that users have added messages to.");
-				System.out.println("  version");
+				System.out.println("  serverinfo");
 				System.out.println("    Print the server version.");
 				System.out.println("  exit");
 				System.out.println("    Exit the program.");
