@@ -124,4 +124,10 @@ public final class View implements BasicView, SinglesView {
   public ServerInfo getInfo() {
     return info;
   }
+
+  //TODO return a specific
+  @Override
+  public String getAllConvosFromServer() {
+    return "hello world";
+  }
 }

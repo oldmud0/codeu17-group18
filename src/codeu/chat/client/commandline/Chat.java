@@ -272,13 +272,11 @@ public final class Chat {
           final VersionInfo version = context.getVersion();
           if (version == null) {
               System.out.println("ERROR: No version returned");
-          }
-          else {
+          } else {
               System.out.format("Server version: %s\n", version.toString());
           }
         }
-      }
-    });
+      });
 
     panel.register("serverinfo", new Panel.Command() {
       @Override
@@ -291,6 +289,7 @@ public final class Chat {
         }
       }
     });
+
 
     // Now that the panel has all its commands registered, return the panel
     // so that it can be used.
@@ -465,6 +464,17 @@ public final class Chat {
       }
     });
 
+    panel.register("u-status-update", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+          final String userStatusUpdate = context.getAllConvosFromServer();
+          if (userStatusUpdate == null) {
+              System.out.println("ERROR: No user status update returned");
+          } else {
+              System.out.print(userStatusUpdate);
+          }
+        }
+      });
     // INFO
     //
     // Add a command that will print info about the current context when the
