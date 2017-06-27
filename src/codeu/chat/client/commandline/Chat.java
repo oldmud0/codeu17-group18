@@ -48,6 +48,7 @@ public final class Chat {
 	// panel to the top of the stack. When a command wants to go to the previous
 	// panel all it needs to do is pop the top panel.
 	private final Stack<Panel> panels = new Stack<>();
+	private Context context2;
 
 	public Chat(Context context) {
 		this.panels.push(createRootPanel(context));
@@ -226,13 +227,16 @@ public final class Chat {
 
 		// TODO: implement
 		panel.register("u-status-update", new Panel.Command() {
-			@Override
-			public void invoke(List<String> args) {
-				final String name = args.remove(0);
-				// final ConversationContext conversation = find(name);
-
-			}
-		});
+		      @Override
+		      public void invoke(List<String> args) {
+		          final String userStatusUpdate = context2.getAllConvosFromServer();
+		          if (userStatusUpdate == null) {
+		              System.out.println("ERROR: No user status update returned");
+		          } else {
+		              System.out.print(userStatusUpdate);
+		          }
+		        }
+		      });
 		// U-SIGN-IN (sign in user)
 		//
 		// Add a command to sign-in as a user when the user enters "u-sign-in"
@@ -285,6 +289,7 @@ public final class Chat {
 
 		// Now that the panel has all its commands registered, return the panel
 		// so that it can be used.
+		context2 = context;
 		return panel;
 	}
 
@@ -456,6 +461,8 @@ public final class Chat {
 				return null;
 			}
 		});
+		
+		
 
 		// INFO
 		//
