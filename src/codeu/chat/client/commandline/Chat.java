@@ -224,11 +224,15 @@ public final class Chat {
     panel.register("u-status-update", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        final String name = args.remove(0);
-        //final ConversationContext conversation = find(name);
-
+        final String userStatusUpdate = context2.getAllConvosFromServer();
+        if (userStatusUpdate == null) {
+          System.out.println("ERROR: No user status update returned");
+        } else {
+          System.out.print(userStatusUpdate);
+        }
       }
     });
+
     // U-SIGN-IN (sign in user)
     //
     // Add a command to sign-in as a user when the user enters "u-sign-in"
@@ -531,6 +535,8 @@ public final class Chat {
         return null;
       }
     });
+		
+		
 
     // INFO
     //
