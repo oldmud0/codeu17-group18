@@ -21,12 +21,15 @@ public class VersionInfo {
 
   /**
    * Creates a new VersionInfo object with the current supported version.
+<<<<<<< HEAD
    */
   public VersionInfo(){
     this(getCurrentVersionUuid());
   }
   /**
    * Creates a new VersionInfo object with the current supported version.
+=======
+>>>>>>> origin/interest-system
    * 
    * <p>If the current version string cannot be parsed into a UUID, the version
    * will be a null UUID.
@@ -41,6 +44,7 @@ public class VersionInfo {
   public VersionInfo(Uuid version) {
     this.version = version;
   }
+<<<<<<< HEAD
   
   public Uuid getVersion() {
     return version;
@@ -53,7 +57,17 @@ public class VersionInfo {
   }
   //Retrieves the stored UUID form of the version.
 
+=======
+
+  /**
+   * Retrieves the stored UUID form of the version.
+   */
+  public Uuid getVersion() {
+    return version;
+  }
+>>>>>>> origin/interest-system
   
+  //Retrieves the stored UUID form of the version.  
   private static final Uuid getCurrentVersionUuid() {
     try {
       return Uuid.parse(CURRENT_VERSION);
@@ -62,5 +76,9 @@ public class VersionInfo {
       return Uuid.NULL;
     }
   }
-  
+
+  public String toString() {
+    return version.toString();
+  }
+
 }
