@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package codeu.chat.server;
 
 import java.io.IOException;
@@ -48,6 +47,7 @@ import codeu.chat.util.InterestInfo;
 import codeu.chat.util.connections.Connection;
 
 public final class Server {
+
 
   private interface Command {
     void onMessage(InputStream in, OutputStream out) throws IOException;

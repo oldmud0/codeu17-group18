@@ -19,10 +19,10 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Stack;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.ArrayList;
 import java.io.IOException;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import codeu.chat.common.User;
@@ -36,6 +36,7 @@ import codeu.chat.util.ServerInfo;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.InterestInfo;
+
 
 public final class Chat{
 
