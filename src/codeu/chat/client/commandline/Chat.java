@@ -121,15 +121,8 @@ public final class Chat{
         System.out.println("    List all users.");
         System.out.println("  u-add <name>");
         System.out.println("    Add a new user with the given name.");
-        System.out.println("  u-add-interest <name>");
-        System.out.println("    Adds the user with given name to interest system.");
-        System.out.println("  u-remove-interest <name>");
-        System.out.println("    Removes the user with given name in interest system.");
         System.out.println("  u-sign-in <name>");
         System.out.println("    Sign in as the user with the given name.");
-        System.out.println("  u-status-update <name>");
-        System.out.print("      Lists creates conversations and conversations");
-        System.out.println(" that users have added messages to.");
         System.out.println("  version");
         System.out.println("    Print the server version.");
         System.out.println("  exit");
@@ -476,7 +469,7 @@ public final class Chat{
         }
         return null;
       }
-      });
+    });
     // INFO
     //
     // Add a command that will print info about the current context when the

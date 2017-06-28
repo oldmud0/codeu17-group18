@@ -61,7 +61,8 @@ public final class Server {
 
   private final Map<Integer, Command> commands = new HashMap<>();
   //all the users in the chat app and their interest info
-  public  Map<User, InterestInfo> userInterests = new HashMap<>();
+
+  private  Map<User, InterestInfo> userInterests = new HashMap<>();
   private final Uuid id;
   private final Secret secret;
 

@@ -56,10 +56,5 @@ public final class Context {
   public ServerInfo getInfo() {
     return view.getInfo();
   }
-  /*
-  public String getAllConvosFromServer(Uuid signedInId) {
-    return view.getAllConvosFromServer(signedInId);
-  }
-  */
-  
+
 }

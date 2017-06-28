@@ -41,7 +41,7 @@ public class VersionInfo {
   public VersionInfo(Uuid version) {
     this.version = version;
   }
-  
+
   public Uuid getVersion() {
     return version;
   }
