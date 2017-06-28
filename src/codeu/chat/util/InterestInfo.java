@@ -48,7 +48,7 @@ public class InterestInfo {
 
     // returns a map if interested convo ids mapped to the number of convos in
     // messages
-    public Map<String, Integer> getInterestedConvoIds() {
+    public Map<String, Integer> getInterestedConvos() {
       return messagesInConvos;
     }
     // add interested user
@@ -84,6 +84,15 @@ public class InterestInfo {
     }
 
     public String getModifiedConvos() {
-      return convos.toString();
+      String makeString = String.join(", ", convos);
+      return makeString;
+    }
+
+    public void removeInterestUser(Uuid toRemove) {
+      ids.remove(toRemove);
+    }
+
+    public void removeInterestConvo(String toRemove) {
+      messagesInConvos.remove(toRemove);
     }
   }

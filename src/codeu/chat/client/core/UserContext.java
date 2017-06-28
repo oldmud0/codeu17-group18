@@ -53,4 +53,29 @@ public final class UserContext {
 
     return all;
   }
+
+  public String getAllConvosFromServer(Uuid signedInId) {
+    return view.getAllConvosFromServer(signedInId);
+  }
+
+  public String getNumMessagesFromServer(Uuid signedInId) {
+    return view.getNumMessagesFromServer(signedInId);
+  }
+
+  public String createUserInterest(String name){
+    return controller.newUserInterest(name, user.id);
+  }
+
+  public String createConvoInterest(String name){
+    return controller.newConvoInterest(name, user.id);
+  }
+
+  public String removeUserInterest(String name) {
+    return controller.deleteUserInterest(name, user.id);
+  }
+
+  public String removeConvoInterest(String name) {
+    return controller.deleteConvoInterest(name, user.id);
+  }
+  
 }

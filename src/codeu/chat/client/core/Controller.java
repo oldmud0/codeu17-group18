@@ -90,6 +90,104 @@ final class Controller implements BasicController {
   }
 
   @Override
+  public String newUserInterest(String name, Uuid signedInId) {
+
+    String response = null;
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.NEW_USER_INTEREST_REQUEST);
+      Serializers.STRING.write(connection.out(), name);
+      Uuid.SERIALIZER.write(connection.out(), signedInId);
+      LOG.info("newInterestUser: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.NEW_USER_INTEREST_RESPONSE) {
+        response = new String(Serializers.STRING.read(connection.in()));
+        LOG.info("newInterestUser: Response completed.");
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+    return response;
+  }
+
+  @Override
+  public String newConvoInterest(String title, Uuid owner) {
+    String response = null;
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.NEW_CONVO_INTEREST_REQUEST);
+      Serializers.STRING.write(connection.out(), title);
+      Uuid.SERIALIZER.write(connection.out(), owner);
+      LOG.info("newInterestConvo: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.NEW_CONVO_INTEREST_RESPONSE) {
+        response = new String(Serializers.STRING.read(connection.in()));
+        LOG.info("newInterestConvo: Response completed.");
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+    return response;
+  }
+
+  @Override
+  public String deleteUserInterest(String name, Uuid signedInId) {
+
+    String response = null;
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.REMOVE_USER_INTEREST_REQUEST);
+      Serializers.STRING.write(connection.out(), name);
+      Uuid.SERIALIZER.write(connection.out(), signedInId);
+      LOG.info("removeInterestUser: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.REMOVE_USER_INTEREST_RESPONSE) {
+        response = new String(Serializers.STRING.read(connection.in()));
+        LOG.info("removeInterestUser: Response completed.");
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+    return response;
+  }
+
+  @Override
+  public String deleteConvoInterest(String name, Uuid signedInId) {
+    String response = null;
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.REMOVE_CONVO_INTEREST_REQUEST);
+      Serializers.STRING.write(connection.out(), name);
+      Uuid.SERIALIZER.write(connection.out(), signedInId);
+      LOG.info("removeInterestConvo: Request completed.");
+
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.REMOVE_CONVO_INTEREST_RESPONSE) {
+        response = new String(Serializers.STRING.read(connection.in()));
+        LOG.info("removeInterestConvo: Response completed.");
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+    return response;
+  }
+
+  @Override
   public ConversationHeader newConversation(String title, Uuid owner)  {
 
     ConversationHeader response = null;

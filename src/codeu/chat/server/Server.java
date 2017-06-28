@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
@@ -59,7 +61,7 @@ public final class Server {
 
   private final Map<Integer, Command> commands = new HashMap<>();
   //all the users in the chat app and their interest info
-  private  Map<User, InterestInfo> userInterests = new HashMap<>();
+  public  Map<User, InterestInfo> userInterests = new HashMap<>();
   private final Uuid id;
   private final Secret secret;
 
@@ -203,18 +205,58 @@ public final class Server {
     this.commands.put(NetworkCode.NEW_USER_INTEREST_REQUEST,  new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        final String interestName = Serializers.STRING.read(in);
-        final Uuid signedInId = Uuid.SERIALIZER.read(in);
-        User signedInUser = view.findUser(signedInId);
+
         User interest = null;
+        final String interestName = Serializers.STRING.read(in);
+
         for(User temp : userInterests.keySet()) {
-          if(temp.name == interestName) {
+          if(temp.name.equals(interestName)) {
             interest = temp;
           }
         }
-        userInterests.get(signedInUser).addInterestUser(interest.id);
+
+        Uuid interestID = interest.id;
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(signedInId);
+        User temp = null;
+
+        for (User key : userInterests.keySet()) {
+          if(key.equals(signedInUser)){
+            userInterests.get(key).addInterestUser(interestID);
+            temp = key;
+          }
+        }
+
+        String confirmation = new String("You have added "+ '"' + interestName + '"' + " to your interests, congratulations.");
         Serializers.INTEGER.write(out, NetworkCode.NEW_USER_INTEREST_RESPONSE);
-        //Serializers.nullable(User.SERIALIZER).write(out, user);
+        Serializers.STRING.write(out, confirmation);
+      }
+    });
+
+    this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        final User signedInUser = view.findUser(signedInId);
+        User temp = null;
+
+        for (User key : userInterests.keySet()) {
+          if(key.equals(signedInUser)){
+            temp = key;
+          }
+        }
+
+        final Set<Uuid> ids = userInterests.get(temp).getInterestedUserIds();
+        final List<String> allConvos = new ArrayList<String>();
+
+        for(Uuid interestId : ids) {
+          User interestUser = view.findUser(interestId);
+          allConvos.add(userInterests.get(interestUser).getModifiedConvos());
+        }
+
+        String makeString = String.join(", ", allConvos);
+        Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
+        Serializers.STRING.write(out, makeString+"\n");
       }
     });
 
@@ -224,39 +266,74 @@ public final class Server {
         // title of interested convo to be added
         final String title = Serializers.STRING.read(in);
         // signed in user
-        final Uuid owner = Uuid.SERIALIZER.read(in);
-        userInterests.get(owner).addInterestUser(owner);
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        final User signedInUser = view.findUser(signedInId);
+
+        userInterests.get(signedInUser).addInterestConvo(title);
+
+        String confirmation = new String("You have added "+ '"' + title + '"' + " to your interests.");
         Serializers.INTEGER.write(out, NetworkCode.NEW_CONVO_INTEREST_RESPONSE);
-        //Serializers.nullable(User.SERIALIZER).write(out, user);
+        Serializers.STRING.write(out, confirmation);
       }
     });
 
-    // get a status update for a c
+    this.commands.put(NetworkCode.REMOVE_USER_INTEREST_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        User interest = null;
+        final String interestName = Serializers.STRING.read(in);
+        for(User temp : userInterests.keySet()) {
+          if(temp.name.equals(interestName)) {
+            interest = temp;
+          }
+        }
+
+        Uuid interestID = interest.id;
+
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        final User signedInUser = view.findUser(signedInId);
+       
+        userInterests.get(signedInUser).removeInterestUser(interestID);
+
+        String confirmation = new String("You have removed the user "+ '"' + interestName + '"' + " from your interests.");
+        Serializers.INTEGER.write(out, NetworkCode.REMOVE_USER_INTEREST_RESPONSE);
+        Serializers.STRING.write(out, confirmation);
+      }
+    });
+
+    this.commands.put(NetworkCode.REMOVE_CONVO_INTEREST_REQUEST,  new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        // title of interested convo to be added
+        final String title = Serializers.STRING.read(in);
+        // signed in user
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        final User signedInUser = view.findUser(signedInId);
+
+        userInterests.get(signedInUser).removeInterestConvo(title);
+
+        String confirmation = new String("You have removed the conversation "+ '"' + title + '"' + " from your interests.");
+        Serializers.INTEGER.write(out, NetworkCode.REMOVE_CONVO_INTEREST_RESPONSE);
+        Serializers.STRING.write(out, confirmation);
+      }
+    });
+
+    // get a status update for a convo
     this.commands.put(NetworkCode.GET_CONVO_STATUS_UPDATE_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        // TODO: implement
-        Serializers.INTEGER.write(out, NetworkCode.GET_CONVO_STATUS_UPDATE_RESPONSE);
-
-      }
-    });
-
-    this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST, new Command() {
-      @Override
-      public void onMessage(InputStream in, OutputStream out) throws IOException {
         final Uuid signedInId = Uuid.SERIALIZER.read(in);
-        User signedInUser = view.findUser(signedInId);
-        Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
-        List<String> allConvos = new ArrayList<String>();
-        for(Uuid interestId : userInterests.get(signedInUser).getInterestedUserIds()) {
-          User interestUser = view.findUser(interestId);
-          allConvos.add(userInterests.get(interestUser).getModifiedConvos());
-        }
+        final User signedInUser = view.findUser(signedInId);
 
-      //  String makeString = String.join(", ", allConvos);
-      //  Serializers.STRING.write(out, allConvos.toString());
-      Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
-      Serializers.STRING.write(out, "hello world");
+        String convoStatusUpdate = "";
+        Map<String, Integer> interestedConvos = userInterests.get(signedInUser).getInterestedConvos();
+        Set<String> convoInterestTitles = interestedConvos.keySet();
+        for(String convoTitle : convoInterestTitles){
+          convoStatusUpdate = convoStatusUpdate + convoTitle + " : " + interestedConvos.get(convoTitle) + " ";
+          userInterests.get(signedInUser).resetMessages(convoTitle);
+        }
+        Serializers.INTEGER.write(out, NetworkCode.GET_CONVO_STATUS_UPDATE_RESPONSE);
+        Serializers.STRING.write(out, convoStatusUpdate);
       }
     });
 

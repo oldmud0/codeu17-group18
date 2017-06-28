@@ -128,6 +128,30 @@ public final class Controller implements RawController, BasicController {
   }
 
   @Override
+  public String newUserInterest(String name, Uuid signedInId) {
+    String str = "I am in the controller";
+    return str;
+  }
+
+  @Override
+  public String newConvoInterest(String name, Uuid owner){
+    String str = "I am convo interest in the controller";
+    return str;
+  }
+  @Override
+  public String deleteUserInterest(String name, Uuid signedInId) {
+    String str = "";
+    return str;
+  }
+  
+  @Override
+  public String deleteConvoInterest(String name, Uuid signedInId) {
+    String str = "";
+    return str;
+  }
+
+
+  @Override
   public ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
 
     final User foundOwner = model.userById().first(owner);

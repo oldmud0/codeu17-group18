@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.io.IOException;
 import java.util.Iterator;
 
-
+import codeu.chat.common.User;
 import codeu.chat.client.core.Context;
 import codeu.chat.client.core.ConversationContext;
 import codeu.chat.client.core.MessageContext;
@@ -37,7 +37,7 @@ import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.InterestInfo;
 
-public final class Chat {
+public final class Chat{
 
   // PANELS
   //
@@ -173,64 +173,6 @@ public final class Chat {
       }
     });
 
-    //U-ADD-INTEREST
-    //
-    // Adds the specified user to the user's interest system
-    panel.register("u-add-interest", new Panel.Command() {
-      @Override
-      public void invoke(List<String> args) {
-        final String name = args.remove(0);
-        final UserContext user = findUser(name);
-        System.out.println(user.user.id);
-      }
-
-      // Find the first user with the given name and return a user context
-      // for that user. If no user is found, the function will return null.
-      private UserContext findUser(String name) {
-        for (final UserContext user : context.allUsers()) {
-          if (user.user.name.equals(name)) {
-            return user;
-          }
-        }
-        return null;
-      }
-    });
-
-
-    //U-REMOVE-INTEREST
-    //
-    // Removes the specified user in the user's interest system
-    panel.register("u-remove-interest", new Panel.Command() {
-      @Override
-      public void invoke(List<String> args) {
-        final String name = args.remove(0);
-        final UserContext user = findUser(name);
-
-      }
-
-      // Find the first user with the given name and return a user context
-      // for that user. If no user is found, the function will return null.
-      private UserContext findUser(String name) {
-        for (final UserContext user : context.allUsers()) {
-          if (user.user.name.equals(name)) {
-            return user;
-          }
-        }
-        return null;
-      }
-    });
-
-    //TODO: implement
-    /*
-    panel.register("u-status-update", new Panel.Command() {
-      @Override
-      public void invoke(List<String> args) {
-        final String name = args.remove(0);
-        //final ConversationContext conversation = find(name);
-
-      }
-    });
-    */
     // U-SIGN-IN (sign in user)
     //
     // Add a command to sign-in as a user when the user enters "u-sign-in"
@@ -318,14 +260,20 @@ public final class Chat {
         System.out.println("    List all conversations that the current user can interact with.");
         System.out.println("  c-add <title>");
         System.out.println("    Add a new conversation with the given title and join it as the current user.");
-        System.out.println("  c-add-interest <title>");
+        System.out.println("  c-add-userInterest <name>");
+        System.out.println("    Add this user with the given name to user's interest system.");
+        System.out.println("  c-add-convoInterest <title>");
         System.out.println("    Add this conversation with the given title to user's interest system.");
-        System.out.println("  c-remove-interest <title>");
-        System.out.println("    Remove this conversation with the given title in user's interest system.");
+        System.out.println("  c-remove-userInterest <name>");
+        System.out.println("    Remove this user with the given name from user's interest system.");
+        System.out.println("  c-remove-convoInterest <title>");
+        System.out.println("    Remove this conversation with the given title from user's interest system.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
-        System.out.println("  c-status-update <title>");
-        System.out.println("      Prints how many messages has been added since last update.");
+        System.out.println("  c-convo-statusUpdate");
+        System.out.println("      Prints how many messages have been added to interested conversations since last update.");
+        System.out.println("  c-user-statusUpdate");
+        System.out.println("      Prints all conversations that have been created or modified for each interested user.");
         System.out.println("  info");
         System.out.println("    Display all info for the current user");
         System.out.println("  back");
@@ -352,6 +300,64 @@ public final class Chat {
       }
     });
 
+    panel.register("c-add-userInterest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+
+        if (name.length() > 0) {
+          if(user.createUserInterest(name) == null){
+            System.out.println("ERROR: Failed to create new userInterest");
+          } else {
+          System.out.println(user.createUserInterest(name));
+          }
+        }
+      }
+    });
+
+    panel.register("c-add-convoInterest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        
+        if(name.length() > 0) {
+          if(user.createConvoInterest(name) == null){
+            System.out.println("ERROR: Failed to create new convoInterest");
+          } else {
+            System.out.println(user.createConvoInterest(name));
+          }
+        }
+      }
+    });
+
+    panel.register("c-remove-userInterest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        if (name.length() > 0) {
+          if(user.removeUserInterest(name) == null){
+            System.out.println("ERROR: Failed to remove userInterest");
+          } else {
+          System.out.println(user.removeUserInterest(name));
+          }
+        }
+      }
+    });
+
+    panel.register("c-remove-convoInterest", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        final String name = args.remove(0);
+        if (name.length() > 0) {
+          if(user.removeConvoInterest(name) == null){
+            System.out.println("ERROR: Failed to remove userInterest");
+          } else {
+          System.out.println(user.removeConvoInterest(name));
+          }
+        }
+      }
+    });
+
     // C-ADD (add conversation)
     //
     // Add a command that will create and join a new conversation when the user
@@ -374,27 +380,9 @@ public final class Chat {
       }
     });
 
-    //C-ADD-INTEREST (add conversation to intererst)
+    //C-ADD-INTEREST (add conversation to interest)
     //
     //Add this conversation to the user's interest system
-    panel.register("c-add-interest", new Panel.Command() {
-      @Override
-      public void invoke(List<String> args) {
-        final String name = args.remove(0);
-        final ConversationContext conversation = find(name);
-      }
-
-      // Find the first conversation with the given name and return its context.
-      // If no conversation has the given name, this will return null.
-      private ConversationContext find(String title) {
-        for (final ConversationContext conversation : user.conversations()) {
-          if (title.equals(conversation.conversation.title)) {
-            return conversation;
-          }
-        }
-        return null;
-      }
-    });
 
     // C-REMOVE-INTEREST (removes conversation in intererst)
     //
@@ -448,36 +436,46 @@ public final class Chat {
       }
     });
 
-    panel.register("c-status-update", new Panel.Command() {
+    panel.register("c-convo-statusUpdate", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        final String name = args.remove(0);
-        final ConversationContext conversation = find(name);
+        final Uuid signedInId = user.user.id;
+        final String convoStatusUpdate = user.getNumMessagesFromServer(signedInId);
 
+        if (convoStatusUpdate == null) {
+          System.out.println("ERROR: No user status update returned");
+        } else {
+          System.out.print(convoStatusUpdate);
+        }
       }
 
-      // Find the first conversation with the given name and return its context.
-      // If no conversation has the given name, this will return null.
-      private ConversationContext find(String title) {
-        for (final ConversationContext conversation : user.conversations()) {
-          if (title.equals(conversation.conversation.title)) {
-            return conversation;
+    });
+
+    panel.register("c-user-statusUpdate", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        //final String name = args.remove(0);
+        //final UserContext user = findUser(name);
+        final Uuid signedInId = user.user.id;
+
+        final String userStatusUpdate = user.getAllConvosFromServer(signedInId);
+        if (userStatusUpdate == null) {
+          System.out.println("ERROR: No user status update returned");
+        } else {
+          System.out.print(userStatusUpdate);
+        }
+      }
+
+      // Find the first user with the given name and return a user context
+      // for that user. If no user is found, the function will return null.
+      private UserContext findUser(String name) {
+        for (final UserContext user : context2.allUsers()) {
+          if (user.user.name.equals(name)) {
+            return user;
           }
         }
         return null;
       }
-    });
-
-    panel.register("u-status-update", new Panel.Command() {
-      @Override
-      public void invoke(List<String> args) {
-          final String userStatusUpdate = context2.getAllConvosFromServer();
-          if (userStatusUpdate == null) {
-              System.out.println("ERROR: No user status update returned");
-          } else {
-              System.out.print(userStatusUpdate);
-          }
-        }
       });
     // INFO
     //

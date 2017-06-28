@@ -177,15 +177,31 @@ final class View implements BasicView {
   }
   
   @Override
-  public String getAllConvosFromServer() {
+  public String getAllConvosFromServer(Uuid signedInId) {
     try (final Connection connection = source.connect()) {
-
       Serializers.INTEGER.write(connection.out(), NetworkCode.GET_USER_STATUS_UPDATE_REQUEST);
-      //Serializers.INTEGER.read(connection.in()) doesn't match GET_USER_STATUS_UPDATE
+      Uuid.SERIALIZER.write(connection.out(), signedInId);
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE) {
-        //convos stores a String object
-        //Serializers.STRING.read(connection.in()) doesn't retrieve anything
-        final String convos = Serializers.STRING.read(connection.in());
+        final String convos = new String(Serializers.STRING.read(connection.in()));
+        return convos;
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      // TODO: switch to system.err
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
+    return null;
+  }
+  
+  @Override
+  public String getNumMessagesFromServer(Uuid signedInId) {
+    try (final Connection connection = source.connect()) {
+      Serializers.INTEGER.write(connection.out(), NetworkCode.GET_CONVO_STATUS_UPDATE_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), signedInId);
+      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_CONVO_STATUS_UPDATE_RESPONSE) {
+        final String convos = new String(Serializers.STRING.read(connection.in()));
         return convos;
       } else {
         LOG.error("Response from server failed.");

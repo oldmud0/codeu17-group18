@@ -22,6 +22,7 @@ import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.connections.ConnectionSource;
 import codeu.chat.util.ServerInfo;
+import codeu.chat.util.Uuid;
 
 public final class Context {
 
@@ -55,8 +56,10 @@ public final class Context {
   public ServerInfo getInfo() {
     return view.getInfo();
   }
-
-  public String getAllConvosFromServer() {
-    return view.getAllConvosFromServer();
+  /*
+  public String getAllConvosFromServer(Uuid signedInId) {
+    return view.getAllConvosFromServer(signedInId);
   }
+  */
+  
 }

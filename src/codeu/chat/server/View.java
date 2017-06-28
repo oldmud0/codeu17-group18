@@ -127,7 +127,12 @@ public final class View implements BasicView, SinglesView {
 
   //TODO return a specific
   @Override
-  public String getAllConvosFromServer() {
-    return "hello world";
+  public String getAllConvosFromServer(Uuid signedInId) {
+    return "";
+  }
+
+  @Override
+  public String getNumMessagesFromServer(Uuid signedInId) {
+    return "";
   }
 }

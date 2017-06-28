@@ -42,4 +42,8 @@ public interface RawController {
   // already in use, the call will fail and null will be returned.
   ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime);
 
+  String newUserInterest(String name, Uuid signedInId);
+  String newConvoInterest(String name, Uuid owner);
+  String deleteUserInterest(String name, Uuid signedInId);
+  String deleteConvoInterest(String name, Uuid signedInId);
 }
