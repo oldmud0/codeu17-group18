@@ -18,20 +18,15 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Arrays;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
-import codeu.chat.common.LinearUuidGenerator;
 import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.Relay;
@@ -39,198 +34,196 @@ import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
+import codeu.chat.util.InterestInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
 import codeu.chat.util.Timeline;
 import codeu.chat.util.Uuid;
-import codeu.chat.util.InterestInfo;
 import codeu.chat.util.connections.Connection;
 
 public final class Server {
 
+  private interface Command {
+    void onMessage(InputStream in, OutputStream out) throws IOException;
+  }
 
-	private interface Command {
-		void onMessage(InputStream in, OutputStream out) throws IOException;
-	}
+  private static final Logger.Log LOG = Logger.newLog(Server.class);
 
-	private static final Logger.Log LOG = Logger.newLog(Server.class);
+  private static final int RELAY_REFRESH_MS = 5000; // 5 seconds
 
-	private static final int RELAY_REFRESH_MS = 5000; // 5 seconds
+  private final Timeline timeline = new Timeline();
 
-	private final Timeline timeline = new Timeline();
+  private final Map<Integer, Command> commands = new HashMap<>();
+  // all the users in the chat app and their interest info
+  private Map<User, InterestInfo> userInterests = new HashMap<>();
+  private final Uuid id;
+  private final Secret secret;
 
-	private final Map<Integer, Command> commands = new HashMap<>();
-	// all the users in the chat app and their interest info
-	private Map<User, InterestInfo> userInterests = new HashMap<>();
-	private final Uuid id;
-	private final Secret secret;
+  private final Model model = new Model();
+  private final View view = new View(model);
+  private final Controller controller;
 
-	private final Model model = new Model();
-	private final View view = new View(model);
-	private final Controller controller;
+  private final Relay relay;
+  private Uuid lastSeen = Uuid.NULL;
 
-	private final Relay relay;
-	private Uuid lastSeen = Uuid.NULL;
+  private PersistenceWriter persistenceWriter; // Not final, as it is not required
 
-	private PersistenceWriter persistenceWriter; // Not final, as it is not
-													// required
+  private final VersionInfo version = new VersionInfo();
+  private static final codeu.chat.util.ServerInfo info = new codeu.chat.util.ServerInfo();
 
-	private final VersionInfo version = new VersionInfo();
-	private static final codeu.chat.util.ServerInfo info = new codeu.chat.util.ServerInfo();
+  public Server(final Uuid id, final Secret secret, final Relay relay) {
 
-	public Server(final Uuid id, final Secret secret, final Relay relay) {
+    this.id = id;
+    this.secret = secret;
+    this.controller = new Controller(id, model);
+    this.relay = relay;
 
-		this.id = id;
-		this.secret = secret;
-		this.controller = new Controller(id, model);
-		this.relay = relay;
+    // New Message - A client wants to add a new message to the back end.
+    this.commands.put(NetworkCode.NEW_MESSAGE_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
 
-		// New Message - A client wants to add a new message to the back end.
-		this.commands.put(NetworkCode.NEW_MESSAGE_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Uuid author = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(author);
+        final Uuid conversation = Uuid.SERIALIZER.read(in);
+        final String content = Serializers.STRING.read(in);
+        ConversationHeader convo = view.findConversation(conversation);
+        // for user status update
+        userInterests.get(signedInUser).addModifiedConversation(convo.title);
+        // for convo status update
+        userInterests.get(signedInUser).addToMessageCount(convo.title);
+        final Message message = controller.newMessage(author, conversation, content);
 
-				final Uuid author = Uuid.SERIALIZER.read(in);
-				User signedInUser = view.findUser(author);
-				final Uuid conversation = Uuid.SERIALIZER.read(in);
-				final String content = Serializers.STRING.read(in);
-				ConversationHeader convo = view.findConversation(conversation);
-				// for user status update
-				userInterests.get(signedInUser).addModifiedConversation(convo.title);
-				// for convo status update
-				userInterests.get(signedInUser).addToMessageCount(convo.title);
-				final Message message = controller.newMessage(author, conversation, content);
+        Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
+        Serializers.nullable(Message.SERIALIZER).write(out, message);
 
-				Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
-				Serializers.nullable(Message.SERIALIZER).write(out, message);
-
-				timeline.scheduleNow(createSendToRelayEvent(author, conversation, message.id));
-			}
-		});
-
-		// New User - A client wants to add a new user to the back end.
-		this.commands.put(NetworkCode.NEW_USER_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-
-				final String name = Serializers.STRING.read(in);
-				final User user = controller.newUser(name);
-				userInterests.put(user, new InterestInfo());
-
-				Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
-				Serializers.nullable(User.SERIALIZER).write(out, user);
-			}
-		});
-
-		// New Conversation - A client wants to add a new conversation to the
-		// back end.
-		this.commands.put(NetworkCode.NEW_CONVERSATION_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-				// title of conversation
-				final String title = Serializers.STRING.read(in);
-				// user that we put in as a key
-				final Uuid owner = Uuid.SERIALIZER.read(in);
-				User signedInUser = view.findUser(owner);
-				userInterests.get(signedInUser).addModifiedConversation(title);
-				// userInterests.get(owner).addInterestConvo(title);
-				final ConversationHeader conversation = controller.newConversation(title, owner);
-
-				Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
-				Serializers.nullable(ConversationHeader.SERIALIZER).write(out, conversation);
-			}
-		});
-
-		// Get Users - A client wants to get all the users from the back end.
-		this.commands.put(NetworkCode.GET_USERS_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-
-				final Collection<User> users = view.getUsers();
-
-				Serializers.INTEGER.write(out, NetworkCode.GET_USERS_RESPONSE);
-				Serializers.collection(User.SERIALIZER).write(out, users);
-			}
-		});
-
-		// Get Conversations - A client wants to get all the conversations from
-		// the back end.
-		this.commands.put(NetworkCode.GET_ALL_CONVERSATIONS_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-
-				final Collection<ConversationHeader> conversations = view.getConversations();
-
-				Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
-				Serializers.collection(ConversationHeader.SERIALIZER).write(out, conversations);
-			}
-		});
-
-		// Get Conversations By Id - A client wants to get a subset of the
-		// converations from
-		// the back end. Normally this will be done after calling
-		// Get Conversations to get all the headers and now the client
-		// wants to get a subset of the payloads.
-		this.commands.put(NetworkCode.GET_CONVERSATIONS_BY_ID_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-
-				final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
-				final Collection<ConversationPayload> conversations = view.getConversationPayloads(ids);
-
-				Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_ID_RESPONSE);
-				Serializers.collection(ConversationPayload.SERIALIZER).write(out, conversations);
-			}
-		});
-
-		// Get Messages By Id - A client wants to get a subset of the messages
-		// from the back end.
-		this.commands.put(NetworkCode.GET_MESSAGES_BY_ID_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-
-				final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
-				final Collection<Message> messages = view.getMessages(ids);
-
-				Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_ID_RESPONSE);
-				Serializers.collection(Message.SERIALIZER).write(out, messages);
-			}
-		});
-
-		this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-				Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
-				Uuid.SERIALIZER.write(out, view.getVersion().version);
-			}
-		});
-
-		this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-				Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
-				Uuid.SERIALIZER.write(out, version.getVersion());
-			}
-		});
-
-		this.commands.put(NetworkCode.NEW_USER_INTEREST_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-				final String interestName = Serializers.STRING.read(in);
-				final Uuid signedInId = Uuid.SERIALIZER.read(in);
-				User signedInUser = view.findUser(signedInId);
-				User interest = null;
-				for (User temp : userInterests.keySet()) {
-					if (temp.name == interestName) {
-						interest = temp;
-					}
-				}
-				userInterests.get(signedInUser).addInterestUser(interest.id);
+        timeline.scheduleNow(createSendToRelayEvent(author, conversation, message.id));
       }
     });
 
-    this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST,  new Command() {
+    // New User - A client wants to add a new user to the back end.
+    this.commands.put(NetworkCode.NEW_USER_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+
+        final String name = Serializers.STRING.read(in);
+        final User user = controller.newUser(name);
+        userInterests.put(user, new InterestInfo());
+
+        Serializers.INTEGER.write(out, NetworkCode.NEW_USER_RESPONSE);
+        Serializers.nullable(User.SERIALIZER).write(out, user);
+      }
+    });
+
+    // New Conversation - A client wants to add a new conversation to the
+    // back end.
+    this.commands.put(NetworkCode.NEW_CONVERSATION_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        // title of conversation
+        final String title = Serializers.STRING.read(in);
+        // user that we put in as a key
+        final Uuid owner = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(owner);
+        userInterests.get(signedInUser).addModifiedConversation(title);
+        // userInterests.get(owner).addInterestConvo(title);
+        final ConversationHeader conversation = controller.newConversation(title, owner);
+
+        Serializers.INTEGER.write(out, NetworkCode.NEW_CONVERSATION_RESPONSE);
+        Serializers.nullable(ConversationHeader.SERIALIZER).write(out, conversation);
+      }
+    });
+
+    // Get Users - A client wants to get all the users from the back end.
+    this.commands.put(NetworkCode.GET_USERS_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+
+        final Collection<User> users = view.getUsers();
+
+        Serializers.INTEGER.write(out, NetworkCode.GET_USERS_RESPONSE);
+        Serializers.collection(User.SERIALIZER).write(out, users);
+      }
+    });
+
+    // Get Conversations - A client wants to get all the conversations from
+    // the back end.
+    this.commands.put(NetworkCode.GET_ALL_CONVERSATIONS_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+
+        final Collection<ConversationHeader> conversations = view.getConversations();
+
+        Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
+        Serializers.collection(ConversationHeader.SERIALIZER).write(out, conversations);
+      }
+    });
+
+    // Get Conversations By Id - A client wants to get a subset of the
+    // converations from
+    // the back end. Normally this will be done after calling
+    // Get Conversations to get all the headers and now the client
+    // wants to get a subset of the payloads.
+    this.commands.put(NetworkCode.GET_CONVERSATIONS_BY_ID_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+
+        final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
+        final Collection<ConversationPayload> conversations = view.getConversationPayloads(ids);
+
+        Serializers.INTEGER.write(out, NetworkCode.GET_CONVERSATIONS_BY_ID_RESPONSE);
+        Serializers.collection(ConversationPayload.SERIALIZER).write(out, conversations);
+      }
+    });
+
+    // Get Messages By Id - A client wants to get a subset of the messages
+    // from the back end.
+    this.commands.put(NetworkCode.GET_MESSAGES_BY_ID_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+
+        final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
+        final Collection<Message> messages = view.getMessages(ids);
+
+        Serializers.INTEGER.write(out, NetworkCode.GET_MESSAGES_BY_ID_RESPONSE);
+        Serializers.collection(Message.SERIALIZER).write(out, messages);
+      }
+    });
+
+    this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
+        Uuid.SERIALIZER.write(out, view.getVersion().version);
+      }
+    });
+
+    this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
+        Uuid.SERIALIZER.write(out, version.getVersion());
+      }
+    });
+
+    this.commands.put(NetworkCode.NEW_USER_INTEREST_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final String interestName = Serializers.STRING.read(in);
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(signedInId);
+        User interest = null;
+        for (User temp : userInterests.keySet()) {
+          if (temp.name == interestName) {
+            interest = temp;
+          }
+        }
+        userInterests.get(signedInUser).addInterestUser(interest.id);
+      }
+    });
+
+    this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         final Uuid signedInId = Uuid.SERIALIZER.read(in);
@@ -238,7 +231,7 @@ public final class Server {
         User temp = null;
 
         for (User key : userInterests.keySet()) {
-          if(key.equals(signedInUser)){
+          if (key.equals(signedInUser)) {
             temp = key;
           }
         }
@@ -246,40 +239,40 @@ public final class Server {
         final Set<Uuid> ids = userInterests.get(temp).getInterestedUserIds();
         final List<String> allConvos = new ArrayList<String>();
 
-        for(Uuid interestId : ids) {
+        for (Uuid interestId : ids) {
           User interestUser = view.findUser(interestId);
           allConvos.add(userInterests.get(interestUser).getModifiedConvos());
         }
 
         String makeString = String.join(", ", allConvos);
         Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
-        Serializers.STRING.write(out, makeString+"\n");
-			}
-		});
+        Serializers.STRING.write(out, makeString + "\n");
+      }
+    });
 
-		this.commands.put(NetworkCode.NEW_CONVO_INTEREST_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-				// title of interested convo to be added
-				final String title = Serializers.STRING.read(in);
-				// signed in user
-				final Uuid ownerId = Uuid.SERIALIZER.read(in);
-				final User owner = view.findUser(ownerId);
+    this.commands.put(NetworkCode.NEW_CONVO_INTEREST_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        // title of interested convo to be added
+        final String title = Serializers.STRING.read(in);
+        // signed in user
+        final Uuid ownerId = Uuid.SERIALIZER.read(in);
+        final User owner = view.findUser(ownerId);
         userInterests.get(owner).addInterestConvo(title);
-        String confirmation = new String("You have added "+ '"' + title + '"' + " to your interests.");
-				Serializers.INTEGER.write(out, NetworkCode.NEW_CONVO_INTEREST_RESPONSE);
-				Serializers.STRING.write(out, confirmation);
-				// Serializers.nullable(User.SERIALIZER).write(out, user);
-			}
-		});
+        String confirmation = new String("You have added " + '"' + title + '"' + " to your interests.");
+        Serializers.INTEGER.write(out, NetworkCode.NEW_CONVO_INTEREST_RESPONSE);
+        Serializers.STRING.write(out, confirmation);
+        // Serializers.nullable(User.SERIALIZER).write(out, user);
+      }
+    });
 
-    this.commands.put(NetworkCode.REMOVE_USER_INTEREST_REQUEST,  new Command() {
+    this.commands.put(NetworkCode.REMOVE_USER_INTEREST_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         User interest = null;
         final String interestName = Serializers.STRING.read(in);
-        for(User temp : userInterests.keySet()) {
-          if(temp.name.equals(interestName)) {
+        for (User temp : userInterests.keySet()) {
+          if (temp.name.equals(interestName)) {
             interest = temp;
           }
         }
@@ -288,16 +281,17 @@ public final class Server {
 
         final Uuid signedInId = Uuid.SERIALIZER.read(in);
         final User signedInUser = view.findUser(signedInId);
-       
+
         userInterests.get(signedInUser).removeInterestUser(interestID);
 
-        String confirmation = new String("You have removed the user "+ '"' + interestName + '"' + " from your interests.");
+        String confirmation = new String(
+            "You have removed the user " + '"' + interestName + '"' + " from your interests.");
         Serializers.INTEGER.write(out, NetworkCode.REMOVE_USER_INTEREST_RESPONSE);
         Serializers.STRING.write(out, confirmation);
       }
     });
 
-    this.commands.put(NetworkCode.REMOVE_CONVO_INTEREST_REQUEST,  new Command() {
+    this.commands.put(NetworkCode.REMOVE_CONVO_INTEREST_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         // title of interested convo to be added
@@ -308,212 +302,212 @@ public final class Server {
 
         userInterests.get(signedInUser).removeInterestConvo(title);
 
-        String confirmation = new String("You have removed the conversation "+ '"' + title + '"' + " from your interests.");
+        String confirmation = new String(
+            "You have removed the conversation " + '"' + title + '"' + " from your interests.");
         Serializers.INTEGER.write(out, NetworkCode.REMOVE_CONVO_INTEREST_RESPONSE);
         Serializers.STRING.write(out, confirmation);
       }
     });
 
     // get a status update for a convo
-		this.commands.put(NetworkCode.GET_CONVO_STATUS_UPDATE_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
+    this.commands.put(NetworkCode.GET_CONVO_STATUS_UPDATE_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
         final Uuid signedInId = Uuid.SERIALIZER.read(in);
         final User signedInUser = view.findUser(signedInId);
 
         String convoStatusUpdate = "";
         Map<String, Integer> interestedConvos = userInterests.get(signedInUser).getInterestedConvos();
         Set<String> convoInterestTitles = interestedConvos.keySet();
-        for(String convoTitle : convoInterestTitles){
+        for (String convoTitle : convoInterestTitles) {
           convoStatusUpdate = convoStatusUpdate + convoTitle + " : " + interestedConvos.get(convoTitle) + " ";
           userInterests.get(signedInUser).resetMessages(convoTitle);
         }
         Serializers.INTEGER.write(out, NetworkCode.GET_CONVO_STATUS_UPDATE_RESPONSE);
         Serializers.STRING.write(out, convoStatusUpdate);
-			}
-		});
+      }
+    });
 
-		this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-				final Uuid signedInId = Uuid.SERIALIZER.read(in);
-				User signedInUser = view.findUser(signedInId);
-				List<String> allConvos = new ArrayList<String>();
-		        for(Uuid interestId : userInterests.get(signedInUser).getInterestedUserIds()) {
-		          User interestUser = view.findUser(interestId);
-		          allConvos.add(userInterests.get(interestUser).getModifiedConvos());
-		        }
-		      //  String makeString = String.join(", ", allConvos);
-		      //  Serializers.STRING.write(out, allConvos.toString());
-		      Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
-		      Serializers.STRING.write(out, "hello world");
-			}
-		});
+    this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(signedInId);
+        List<String> allConvos = new ArrayList<String>();
+        for (Uuid interestId : userInterests.get(signedInUser).getInterestedUserIds()) {
+          User interestUser = view.findUser(interestId);
+          allConvos.add(userInterests.get(interestUser).getModifiedConvos());
+        }
+        // String makeString = String.join(", ", allConvos);
+        // Serializers.STRING.write(out, allConvos.toString());
+        Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
+        Serializers.STRING.write(out, "hello world");
+      }
+    });
 
+    this.commands.put(NetworkCode.SERVER_INFO_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
+        Time.SERIALIZER.write(out, view.getInfo().startTime);
+      }
+    });
 
-		this.commands.put(NetworkCode.SERVER_INFO_REQUEST, new Command() {
-			@Override
-			public void onMessage(InputStream in, OutputStream out) throws IOException {
-				Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
-				Time.SERIALIZER.write(out, view.getInfo().startTime);
-			}
-		});
+    this.timeline.scheduleNow(new Runnable() {
+      @Override
+      public void run() {
+        try {
 
-		this.timeline.scheduleNow(new Runnable() {
-			@Override
-			public void run() {
-				try {
+          LOG.verbose("Reading update from relay...");
 
-					LOG.verbose("Reading update from relay...");
+          for (final Relay.Bundle bundle : relay.read(id, secret, lastSeen, 32)) {
+            onBundle(bundle);
+            lastSeen = bundle.id();
+          }
 
-					for (final Relay.Bundle bundle : relay.read(id, secret, lastSeen, 32)) {
-						onBundle(bundle);
-						lastSeen = bundle.id();
-					}
+        } catch (Exception ex) {
 
-				} catch (Exception ex) {
+          LOG.error(ex, "Failed to read update from relay.");
 
-					LOG.error(ex, "Failed to read update from relay.");
+        }
 
-				}
+        timeline.scheduleIn(RELAY_REFRESH_MS, this);
+      }
+    });
+  }
 
-				timeline.scheduleIn(RELAY_REFRESH_MS, this);
-			}
-		});
-	}
+  public Server(final Uuid id, final Secret secret, final Relay relay, final File persistenceFile) {
+    this(id, secret, relay);
 
-	public Server(final Uuid id, final Secret secret, final Relay relay, final File persistenceFile) {
-		this(id, secret, relay);
+    this.persistenceWriter = new PersistenceWriter(persistenceFile, view, new ServerInfo() {
 
-		this.persistenceWriter = new PersistenceWriter(persistenceFile, view, new ServerInfo() {
+      @Override
+      public Uuid id() {
+        return id;
+      }
 
-			@Override
-			public Uuid id() {
-				return id;
-			}
+      @Override
+      public Secret secret() {
+        return secret;
+      }
 
-			@Override
-			public Secret secret() {
-				return secret;
-			}
+      @Override
+      public Uuid lastSeen() {
+        return lastSeen;
+      }
 
-			@Override
-			public Uuid lastSeen() {
-				return lastSeen;
-			}
+      @Override
+      public VersionInfo version() {
+        return version;
+      }
 
-			@Override
-			public VersionInfo version() {
-				return version;
-			}
+    });
 
-		});
+    this.timeline.scheduleIn(PersistenceWriterRunnable.WRITE_INTERVAL_MS,
+        new PersistenceWriterRunnable(persistenceWriter, timeline));
+  }
 
-		this.timeline.scheduleIn(PersistenceWriterRunnable.WRITE_INTERVAL_MS,
-				new PersistenceWriterRunnable(persistenceWriter, timeline));
-	}
+  public Server(final PersistenceFileSkeleton container, final Relay relay, final File persistenceFile) {
+    this(container.serverInfo().id(), container.serverInfo().secret(), relay, persistenceFile);
+    lastSeen = container.serverInfo().lastSeen();
+    // XXX: version is not written!
+    adaptToModel(container);
+  }
 
-	public Server(final PersistenceFileSkeleton container, final Relay relay, final File persistenceFile) {
-		this(container.serverInfo().id(), container.serverInfo().secret(), relay, persistenceFile);
-		lastSeen = container.serverInfo().lastSeen();
-		// XXX: version is not written!
-		adaptToModel(container);
-	}
+  private void adaptToModel(PersistenceFileSkeleton container) {
+    for (User user : container.users().values()) {
+      model.add(user);
+    }
 
-	private void adaptToModel(PersistenceFileSkeleton container) {
-		for (User user : container.users().values()) {
-			model.add(user);
-		}
+    Map<Uuid, ConversationPayload> payloads = container.conversationPayloads();
+    for (ConversationHeader conv : container.conversationHeaders().values()) {
+      ConversationPayload payload = payloads.get(conv.id);
+      model.add(conv, payload);
+    }
 
-		Map<Uuid, ConversationPayload> payloads = container.conversationPayloads();
-		for (ConversationHeader conv : container.conversationHeaders().values()) {
-			ConversationPayload payload = payloads.get(conv.id);
-			model.add(conv, payload);
-		}
+    for (Message msg : container.messages().values()) {
+      model.add(msg);
+    }
+  }
 
-		for (Message msg : container.messages().values()) {
-			model.add(msg);
-		}
-	}
+  public void handleConnection(final Connection connection) {
+    timeline.scheduleNow(new Runnable() {
+      @Override
+      public void run() {
+        try {
 
-	public void handleConnection(final Connection connection) {
-		timeline.scheduleNow(new Runnable() {
-			@Override
-			public void run() {
-				try {
+          LOG.info("Handling connection...");
 
-					LOG.info("Handling connection...");
+          final int type = Serializers.INTEGER.read(connection.in());
+          final Command command = commands.get(type);
+          if (command == null) {
+            // The message type cannot be handled so return a dummy
+            // message.
+            Serializers.INTEGER.write(connection.out(), NetworkCode.NO_MESSAGE);
+            LOG.info("Connection rejected");
+          } else {
+            command.onMessage(connection.in(), connection.out());
+            LOG.info("Connection accepted");
+          }
+        } catch (Exception ex) {
 
-					final int type = Serializers.INTEGER.read(connection.in());
-					final Command command = commands.get(type);
-					if (command == null) {
-						// The message type cannot be handled so return a dummy
-						// message.
-						Serializers.INTEGER.write(connection.out(), NetworkCode.NO_MESSAGE);
-						LOG.info("Connection rejected");
-					} else {
-						command.onMessage(connection.in(), connection.out());
-						LOG.info("Connection accepted");
-					}
-				} catch (Exception ex) {
+          LOG.error(ex, "Exception while handling connection.");
 
-					LOG.error(ex, "Exception while handling connection.");
+        }
 
-				}
+        try {
+          connection.close();
+        } catch (Exception ex) {
+          LOG.error(ex, "Exception while closing connection.");
+        }
+      }
+    });
+  }
 
-				try {
-					connection.close();
-				} catch (Exception ex) {
-					LOG.error(ex, "Exception while closing connection.");
-				}
-			}
-		});
-	}
+  private void onBundle(Relay.Bundle bundle) {
 
-	private void onBundle(Relay.Bundle bundle) {
+    final Relay.Bundle.Component relayUser = bundle.user();
+    final Relay.Bundle.Component relayConversation = bundle.conversation();
+    final Relay.Bundle.Component relayMessage = bundle.user();
 
-		final Relay.Bundle.Component relayUser = bundle.user();
-		final Relay.Bundle.Component relayConversation = bundle.conversation();
-		final Relay.Bundle.Component relayMessage = bundle.user();
+    User user = model.userById().first(relayUser.id());
 
-		User user = model.userById().first(relayUser.id());
+    if (user == null) {
+      user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time());
+    }
 
-		if (user == null) {
-			user = controller.newUser(relayUser.id(), relayUser.text(), relayUser.time());
-		}
+    ConversationHeader conversation = model.conversationById().first(relayConversation.id());
 
-		ConversationHeader conversation = model.conversationById().first(relayConversation.id());
+    if (conversation == null) {
 
-		if (conversation == null) {
+      // As the relay does not tell us who made the conversation - the
+      // first person who
+      // has a message in the conversation will get ownership over this
+      // server's copy
+      // of the conversation.
+      conversation = controller.newConversation(relayConversation.id(), relayConversation.text(), user.id,
+          relayConversation.time());
+    }
 
-			// As the relay does not tell us who made the conversation - the
-			// first person who
-			// has a message in the conversation will get ownership over this
-			// server's copy
-			// of the conversation.
-			conversation = controller.newConversation(relayConversation.id(), relayConversation.text(), user.id,
-					relayConversation.time());
-		}
+    Message message = model.messageById().first(relayMessage.id());
 
-		Message message = model.messageById().first(relayMessage.id());
+    if (message == null) {
+      message = controller.newMessage(relayMessage.id(), user.id, conversation.id, relayMessage.text(),
+          relayMessage.time());
+    }
+  }
 
-		if (message == null) {
-			message = controller.newMessage(relayMessage.id(), user.id, conversation.id, relayMessage.text(),
-					relayMessage.time());
-		}
-	}
-
-	private Runnable createSendToRelayEvent(final Uuid userId, final Uuid conversationId, final Uuid messageId) {
-		return new Runnable() {
-			@Override
-			public void run() {
-				final User user = view.findUser(userId);
-				final ConversationHeader conversation = view.findConversation(conversationId);
-				final Message message = view.findMessage(messageId);
-				relay.write(id, secret, relay.pack(user.id, user.name, user.creation),
-						relay.pack(conversation.id, conversation.title, conversation.creation),
-						relay.pack(message.id, message.content, message.creation));
-			}
-		};
-	}
+  private Runnable createSendToRelayEvent(final Uuid userId, final Uuid conversationId, final Uuid messageId) {
+    return new Runnable() {
+      @Override
+      public void run() {
+        final User user = view.findUser(userId);
+        final ConversationHeader conversation = view.findConversation(conversationId);
+        final Message message = view.findMessage(messageId);
+        relay.write(id, secret, relay.pack(user.id, user.name, user.creation),
+            relay.pack(conversation.id, conversation.title, conversation.creation),
+            relay.pack(message.id, message.content, message.creation));
+      }
+    };
+  }
 }
