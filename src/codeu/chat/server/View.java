@@ -142,4 +142,10 @@ public final class View implements BasicView, SinglesView, OmniView {
   public String getNumMessagesFromServer(Uuid signedInId) {
     return "";
   }
+
+  @Override
+  public String getAllConvosFromServer() {
+    // TODO Ann added getAllConvosFromServer() but failed to implement here!
+    return "";
+  }
 }

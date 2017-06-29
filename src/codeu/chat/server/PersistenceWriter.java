@@ -175,49 +175,11 @@ public class PersistenceWriter {
     }
   }
 
-  private class AnnotatedSerializer<T> implements JsonSerializer<T> {
-
-    private final Class<T> genericType;
-
-    public AnnotatedSerializer(Class<T> genericType) {
-      this.genericType = genericType;
-    }
-
-    @Override
-    public JsonElement serialize(T source, Type typeOfSource, JsonSerializationContext context) {
-      final JsonObject root = new JsonObject();
-
-      Method[] methods = genericType.getMethods();
-
-      for (Method method : methods) {
-        Type returnType = method.getGenericReturnType();
-        JsonProperty jsonProperty = (JsonProperty) method.getAnnotation(JsonProperty.class);
-        String propertyName = jsonProperty.value();
-        LOG.verbose("Method name: %s, returns %s%n", method.getName(), returnType);
-
-        try {
-          root.add(propertyName, context.serialize(method.invoke(source), returnType));
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-          LOG.error(e, "Error serializing property %s", method.getName());
-        }
-      }
-      return root;
-    }
-  }
-
   private class UuidSerializer implements JsonSerializer<Uuid> {
 
     @Override
     public JsonElement serialize(Uuid source, Type typeOfSource, JsonSerializationContext context) {
       return context.serialize(source.toString(), String.class);
-    }
-  }
-
-  private class TimeSerializer implements JsonSerializer<Time> {
-
-    @Override
-    public JsonElement serialize(Time source, Type typeOfSource, JsonSerializationContext context) {
-      return context.serialize(source.inMs(), long.class);
     }
   }
 

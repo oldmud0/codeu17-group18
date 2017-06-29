@@ -33,6 +33,7 @@ import codeu.chat.client.core.MessageContext;
 import codeu.chat.client.core.UserContext;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.ServerInfo;
+import codeu.chat.util.Tokenizer;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.InterestInfo;
@@ -83,10 +84,11 @@ public final class Chat {
       return true;
     }
 
-    if (panels.peek().handleCommand(command, tokens)) {
+    if (panels.peek().handleCommand(command, args)) {
       // the command was handled
       return true;
     }
+
     // If we get to here it means that the command was not correctly handled
     // so we should let the user know. Still return true as we want to continue
     // processing future commands.

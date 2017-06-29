@@ -263,13 +263,12 @@ public final class Server {
 				// title of interested convo to be added
 				final String title = Serializers.STRING.read(in);
 				// signed in user
-				final Uuid owner = Uuid.SERIALIZER.read(in);
-				userInterests.get(owner).addInterestUser(owner);
-
-        userInterests.get(signedInUser).addInterestConvo(title);
-
+				final Uuid ownerId = Uuid.SERIALIZER.read(in);
+				final User owner = view.findUser(ownerId);
+        userInterests.get(owner).addInterestConvo(title);
         String confirmation = new String("You have added "+ '"' + title + '"' + " to your interests.");
 				Serializers.INTEGER.write(out, NetworkCode.NEW_CONVO_INTEREST_RESPONSE);
+				Serializers.STRING.write(out, confirmation);
 				// Serializers.nullable(User.SERIALIZER).write(out, user);
 			}
 		});

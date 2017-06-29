@@ -56,7 +56,6 @@ public final class Context {
   public ServerInfo getInfo() {
     return view.getInfo();
   }
-  
 
   public String getAllConvosFromServer() {
     return view.getAllConvosFromServer();

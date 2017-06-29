@@ -197,44 +197,7 @@ final class View implements BasicView {
     }
     return null;
   }
-}
-
-  public VersionInfo getVersion() {
-    try (final Connection connection = source.connect()) {
-
-      Serializers.INTEGER.write(connection.out(), NetworkCode.GET_SERVER_VERSION_REQUEST);
-
-      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_SERVER_VERSION_RESPONSE) {
-        final Uuid version = Uuid.SERIALIZER.read(connection.in());
-        return new VersionInfo(version);
-      } else {
-        LOG.error("Response from server failed.");
-      }
-    } catch (Exception ex) {
-      // TODO: switch to system.err
-      System.out.println("ERROR: Exception during call on server. Check log for details.");
-      LOG.error(ex, "Exception during call on server.");
-    }
-    return null;
-  }
-
-  @Override
-  public ServerInfo getInfo() {
-    try (final Connection connection = this.source.connect()) {
-      Serializers.INTEGER.write(connection.out(), NetworkCode.SERVER_INFO_REQUEST);
-      if(Serializers.INTEGER.read(connection.in()) == NetworkCode.SERVER_INFO_RESPONSE) {
-        final Time startTime = Time.SERIALIZER.read(connection.in());
-        return new ServerInfo(startTime);
-      } else {
-        LOG.error("Response from server failed.");
-      }
-    } catch (Exception ex) {
-      System.out.println("ERROR: Exception during call on server. CHeck log for details.");
-      LOG.error(ex, "Exception during call on server.");
-    }
-    return null;
-  }
-  
+ 
   @Override
   public String getAllConvosFromServer(Uuid signedInId) {
     try (final Connection connection = source.connect()) {
