@@ -210,16 +210,30 @@ public final class Server {
     this.commands.put(NetworkCode.NEW_USER_INTEREST_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        final String interestName = Serializers.STRING.read(in);
-        final Uuid signedInId = Uuid.SERIALIZER.read(in);
-        User signedInUser = view.findUser(signedInId);
         User interest = null;
-        for (User temp : userInterests.keySet()) {
-          if (temp.name == interestName) {
+        final String interestName = Serializers.STRING.read(in);
+
+        for(User temp : userInterests.keySet()) {
+          if(temp.name.equals(interestName)) {
             interest = temp;
           }
         }
-        userInterests.get(signedInUser).addInterestUser(interest.id);
+
+        Uuid interestID = interest.id;
+        final Uuid signedInId = Uuid.SERIALIZER.read(in);
+        User signedInUser = view.findUser(signedInId);
+        User temp = null;
+
+        for (User key : userInterests.keySet()) {
+          if(key.equals(signedInUser)){
+            userInterests.get(key).addInterestUser(interestID);
+            temp = key;
+          }
+        }
+
+        String confirmation = new String("You have added "+ '"' + interestName + '"' + " to your interests, congratulations.");
+        Serializers.INTEGER.write(out, NetworkCode.NEW_USER_INTEREST_RESPONSE);
+        Serializers.STRING.write(out, confirmation);
       }
     });
 
