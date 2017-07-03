@@ -92,6 +92,10 @@ public class InterestInfo {
       ids.remove(toRemove);
     }
 
+    public void resetConvos() {
+      convos.clear();
+    }
+
     public void removeInterestConvo(String toRemove) {
       messagesInConvos.remove(toRemove);
     }
