@@ -260,6 +260,8 @@ public final class Chat {
         System.out.println("    Add this conversation with the given title to user's interest system.");
         System.out.println("  c-remove-userInterest <name>");
         System.out.println("    Remove this user with the given name from user's interest system.");
+        System.out.println("  c-remove-convoInterest <title>");
+        System.out.println("    Remove this conversation with the given title from user's interest system.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
         System.out.println("  c-convo-statusUpdate");
