@@ -242,6 +242,7 @@ public final class Server {
         for (Uuid interestId : ids) {
           User interestUser = view.findUser(interestId);
           allConvos.add(userInterests.get(interestUser).getModifiedConvos());
+          userInterests.get(interestUser).resetConvos();
         }
 
         String makeString = String.join(", ", allConvos);
