@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
@@ -199,11 +200,11 @@ public final class Server {
       }
     });
 
-    this.commands.put(NetworkCode.GET_SERVER_VERSION_REQUEST, new Command() {
+    this.commands.put(NetworkCode.SERVER_INFO_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        Serializers.INTEGER.write(out, NetworkCode.GET_SERVER_VERSION_RESPONSE);
-        Uuid.SERIALIZER.write(out, version.getVersion());
+        Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
+        Time.SERIALIZER.write(out, view.getInfo().startTime);
       }
     });
 
@@ -340,31 +341,6 @@ public final class Server {
         }
         Serializers.INTEGER.write(out, NetworkCode.GET_CONVO_STATUS_UPDATE_RESPONSE);
         Serializers.STRING.write(out, convoStatusUpdate);
-      }
-    });
-
-    this.commands.put(NetworkCode.GET_USER_STATUS_UPDATE_REQUEST, new Command() {
-      @Override
-      public void onMessage(InputStream in, OutputStream out) throws IOException {
-        final Uuid signedInId = Uuid.SERIALIZER.read(in);
-        User signedInUser = view.findUser(signedInId);
-        List<String> allConvos = new ArrayList<String>();
-        for (Uuid interestId : userInterests.get(signedInUser).getInterestedUserIds()) {
-          User interestUser = view.findUser(interestId);
-          allConvos.add(userInterests.get(interestUser).getModifiedConvos());
-        }
-        // String makeString = String.join(", ", allConvos);
-        // Serializers.STRING.write(out, allConvos.toString());
-        Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
-        Serializers.STRING.write(out, "hello world");
-      }
-    });
-
-    this.commands.put(NetworkCode.SERVER_INFO_REQUEST, new Command() {
-      @Override
-      public void onMessage(InputStream in, OutputStream out) throws IOException {
-        Serializers.INTEGER.write(out, NetworkCode.SERVER_INFO_RESPONSE);
-        Time.SERIALIZER.write(out, view.getInfo().startTime);
       }
     });
 
