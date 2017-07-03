@@ -143,9 +143,4 @@ public final class View implements BasicView, SinglesView, OmniView {
     return "";
   }
 
-  @Override
-  public String getAllConvosFromServer() {
-    // TODO Ann added getAllConvosFromServer() but failed to implement here!
-    return "";
-  }
 }
