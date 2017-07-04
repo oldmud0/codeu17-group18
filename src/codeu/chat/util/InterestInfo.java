@@ -83,9 +83,8 @@ public class InterestInfo {
       return messagesInConvos.get(convo);
     }
 
-    public String getModifiedConvos() {
-      String makeString = String.join(", ", convos);
-      return makeString;
+    public List<String> getModifiedConvos() {
+      return convos;
     }
 
     public void removeInterestUser(Uuid toRemove) {

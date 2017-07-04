@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
@@ -93,7 +94,13 @@ public final class Server {
         // for user status update
         userInterests.get(signedInUser).addModifiedConversation(convo.title);
         // for convo status update
-        userInterests.get(signedInUser).addToMessageCount(convo.title);
+        for (User temp : userInterests.keySet()){
+          if (userInterests.get(temp).getInterestedConvos().isEmpty() == false){
+            if(userInterests.get(temp).getInterestedConvos().containsKey(convo.title)){
+              userInterests.get(temp).addToMessageCount(convo.title);
+            }
+          }
+        }
         final Message message = controller.newMessage(author, conversation, content);
 
         Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
@@ -252,15 +259,16 @@ public final class Server {
         }
 
         final Set<Uuid> ids = userInterests.get(temp).getInterestedUserIds();
-        final List<String> allConvos = new ArrayList<String>();
+        Set<String> uniqueConvos = new HashSet<String>();
 
         for (Uuid interestId : ids) {
           User interestUser = view.findUser(interestId);
-          allConvos.add(userInterests.get(interestUser).getModifiedConvos());
+          uniqueConvos.addAll(userInterests.get(interestUser).getModifiedConvos());
           userInterests.get(interestUser).resetConvos();
         }
 
-        String makeString = String.join(", ", allConvos);
+        String makeString = String.join(", ", uniqueConvos);
+
         Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
         Serializers.STRING.write(out, makeString + "\n");
       }
