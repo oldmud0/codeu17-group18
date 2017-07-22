@@ -103,7 +103,7 @@ def build(config):
 
   print('Running: {}'.format(command))
   exit_code = subprocess.call(command)
-  print('Build {}'.format('PASSED' if exitCode == 0 else 'FAILED'))
+  print('Build {}'.format('PASSED' if exit_code == 0 else 'FAILED'))
   return exit_code
 
 
