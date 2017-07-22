@@ -33,6 +33,7 @@ import codeu.chat.contexts.Context;
 import codeu.chat.contexts.ConversationContext;
 import codeu.chat.contexts.MessageContext;
 import codeu.chat.contexts.UserContext;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Tokenizer;
 import codeu.chat.common.VersionInfo;
@@ -532,18 +533,22 @@ public final class Chat {
     panel.register("m-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        System.out.println("--- start of conversation ---");
-        for (MessageContext message = conversation.firstMessage();
-                            message != null;
-                            message = message.next()) {
-          System.out.println();
-          System.out.format("USER : %s\n", message.message.author);
-          System.out.format("SENT : %s\n", message.message.creation);
-          System.out.println();
-          System.out.println(message.message.content);
-          System.out.println();
+        try {
+          System.out.println("--- start of conversation ---");
+          for (MessageContext message = conversation.firstMessage();
+                              message != null;
+                              message = message.next()) {
+            System.out.println();
+            System.out.format("USER : %s\n", message.message.author);
+            System.out.format("SENT : %s\n", message.message.creation);
+            System.out.println();
+            System.out.println(message.message.content);
+            System.out.println();
+          }
+          System.out.println("---  end of conversation  ---");
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to view this conversation.");
         }
-        System.out.println("---  end of conversation  ---");
       }
     });
 
@@ -555,11 +560,18 @@ public final class Chat {
     panel.register("m-add", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        final String message = args.remove(0);
-        if (message.length() > 0) {
-          conversation.add(message);
-        } else {
-          System.out.println("ERROR: Messages must contain text");
+        try {
+          final String message = args.remove(0);
+          if (message.length() > 0) {
+            conversation.add(message);
+          } else {
+            System.out.println("ERROR: Messages must contain text");
+          }
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to add messages to this conversation.");
+        }
+      }
+    });
         }
       }
     });

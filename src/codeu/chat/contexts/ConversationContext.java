@@ -24,6 +24,7 @@ import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Uuid;
 
 public class ConversationContext {
@@ -45,7 +46,7 @@ public class ConversationContext {
     this.controller = controller;
   }
 
-  public MessageContext add(String messageBody) {
+  public MessageContext add(String messageBody) throws SecurityViolationException {
 
     final Message message = controller.newMessage(user.id,
                                                   conversation.id,
@@ -56,7 +57,7 @@ public class ConversationContext {
         new MessageContext(message, view);
   }
 
-  public MessageContext firstMessage() {
+  public MessageContext firstMessage() throws SecurityViolationException {
 
     // As it is possible for the conversation to have been updated, so fetch
     // a new copy.
@@ -67,7 +68,7 @@ public class ConversationContext {
         getMessage(updated.firstMessage);
   }
 
-  public MessageContext lastMessage() {
+  public MessageContext lastMessage() throws SecurityViolationException {
 
     // As it is possible for the conversation to have been updated, so fetch
     // a new copy.
@@ -76,6 +77,10 @@ public class ConversationContext {
     return updated == null ?
         null :
         getMessage(updated.lastMessage);
+  }
+
+  public void setSecurityFlags(Uuid id, int flags) throws SecurityViolationException {
+    controller.setConversationExplicitPermissions(conversation.id, user.id, id, flags);
   }
 
   private ConversationPayload getUpdated() {
