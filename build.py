@@ -71,6 +71,7 @@ def clean(config):
       os.remove(entry)
 
   print('Clean PASSED')
+  return 0
 
 
 # BUILD
@@ -101,7 +102,9 @@ def build(config):
   command += src_files
 
   print('Running: {}'.format(command))
-  print('Build {}'.format('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
+  exit_code = subprocess.call(command)
+  print('Build {}'.format('PASSED' if exitCode == 0 else 'FAILED'))
+  return exit_code
 
 
 # RUN
@@ -123,7 +126,9 @@ def run(config, start_class_path, arguments):
   for x in command:
     print(x, end=' ')
   print(']')
-  print('Run {}'.format('PASSED' if subprocess.call(command) == 0 else 'FAILED'))
+  exit_code = subprocess.call(command)
+  print('Run {}'.format('PASSED' if exit_code == 0 else 'FAILED'))
+  return exit_code
 
 
 # USAGE
@@ -145,35 +150,41 @@ def usage():
 
 # MAIN
 def main(args):
+  exit_code = 0
   if len(args) > 1:
     command = args[1]
     if 'help' == command:
       usage()
     elif 'clean' == command:
-      clean(CONFIG)
+      exit_code += clean(CONFIG)
     elif 'build' == command:
-      build(CONFIG)
+      exit_code += build(CONFIG)
     elif 'rebuild' == command:
-      clean(CONFIG)
-      build(CONFIG)
+      exit_code += clean(CONFIG)
+      exit_code += build(CONFIG)
     elif 'run' == command:
       if len(args) > 2:
         java_class = args[2]
         java_params = args[3:]
-        run(CONFIG, java_class, java_params)
+        exit_code += run(CONFIG, java_class, java_params)
       else:
         print('Run command requires a java class to run.')
         usage()
+        exit_code = 1
     else:
       print('Unknown command: [', end=' ')
       for x in args:
         print(x, end=' ')
       print(']')
       usage()
+      exit_code = 1
   else:
     print('No parameters provided.')
     usage()
+    exit_code = 1
+  return exit_code
 
 
 if __name__ == '__main__':
-  main(sys.argv)
+  exit_code = main(sys.argv)
+  sys.exit(exit_code)
