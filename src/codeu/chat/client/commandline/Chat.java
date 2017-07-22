@@ -294,6 +294,34 @@ public final class Chat {
       }
     });
 
+    // C-SET-ACCESS (set access for user)
+    //
+    // Add a command that will set access for another user in a conversation
+    // if the logged in user has the correct flags
+    // User must type "c-set-access <id> <flag>" while on the user panel.
+    //
+    panel.register("c-set-access", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        try {
+            final Uuid id = Uuid.parse(args.remove(0));
+            final int flag = Integer.parseInt(args.remove(0));
+
+            if (id != null) {
+              if(user.setNewPermissions(id) == null) {
+                System.out.println("ERROR: Failed to set access");
+              }
+            }
+            else {
+              System.out.println("ERROR: Missing <uuid>");
+            }
+        }
+        catch (IOException ioe) {
+          System.out.println("Error: Unable to parse Uuid");
+        }
+      }
+    });
+
     panel.register("c-add-userInterest", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
