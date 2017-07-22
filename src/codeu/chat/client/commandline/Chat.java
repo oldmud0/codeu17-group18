@@ -296,34 +296,6 @@ public final class Chat {
       }
     });
 
-    // C-SET-ACCESS (set access for user)
-    //
-    // Add a command that will set access for another user in a conversation
-    // if the logged in user has the correct flags
-    // User must type "c-set-access <id> <flag>" while on the user panel.
-    //
-    panel.register("c-set-access", new Panel.Command() {
-      @Override
-      public void invoke(List<String> args) {
-        try {
-            final Uuid id = Uuid.parse(args.remove(0));
-            final int flag = Integer.parseInt(args.remove(0));
-
-            if (id != null) {
-              if(user.setNewPermissions(id) == null) {
-                System.out.println("ERROR: Failed to set access");
-              }
-            }
-            else {
-              System.out.println("ERROR: Missing <uuid>");
-            }
-        }
-        catch (IOException ioe) {
-          System.out.println("Error: Unable to parse Uuid");
-        }
-      }
-    });
-
     panel.register("c-add-userInterest", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
@@ -516,6 +488,8 @@ public final class Chat {
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
         System.out.println("    Add a new message to the current conversation as the current user.");
+        System.out.println("  c-set-access <user id> <none|member|owner>");
+        System.out.println("    Set the access level of the current conversation to the specified preset for a user.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
         System.out.println("  back");
@@ -572,6 +546,30 @@ public final class Chat {
         }
       }
     });
+
+    // C-SET-ACCESS (set access for user)
+    //
+    // Add a command that will set access for another user in a conversation
+    // if the logged in user has the correct flags
+    // User must type "c-set-access <id> <flag>" while on the user panel.
+    //
+    panel.register("c-set-access", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        try {
+            final Uuid id = Uuid.parse(args.remove(0));
+            final int flags = Integer.parseInt(args.remove(0));
+
+            if (id != null) {
+              conversation.setSecurityFlags(id, flags);
+            }
+            else {
+              System.out.println("ERROR: Missing <uuid>");
+            }
+        } catch (IOException e) {
+          System.out.println("ERROR: Unable to parse Uuid");
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to change the permissions of this conversation.");
         }
       }
     });
