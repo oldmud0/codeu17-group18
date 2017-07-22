@@ -14,6 +14,7 @@
 
 package codeu.chat.common;
 
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Uuid;
 
 // BASIC CONTROLLER
@@ -44,16 +45,28 @@ public interface BasicController {
 
   // NEW CONVERSATION
   //
-  //  Create a new conversation on the server. All parameters must be
-  //  provided or else the server won't apply the change. If the
-  //  operation is successful, a Conversation object will be returned
-  //  representing the full state of the conversation on the server.
-  //  Whether conversations can have the same title is undefined.
+  //   Create a new conversation on the server. All parameters must be
+  //   provided or else the server won't apply the change. If the
+  //   operation is successful, a Conversation object will be returned
+  //   representing the full state of the conversation on the server.
+  //   Whether conversations can have the same title is undefined.
   ConversationHeader newConversation(String title, Uuid owner);
 
   String newUserInterest(String name, Uuid signedInId);
+
   String newConvoInterest(String name, Uuid owner);
+
   String deleteUserInterest(String name, Uuid signedInId);
+
   String deleteConvoInterest(String name, Uuid signedInId);
+
+  // SET CONVERSATION PERMISSIONS
+  //
+  //   Set the explicit permissions of a conversation for a specific user.
+  //   If the invoking user does not have the permissions to perform this operation,
+  //   the controller has no choice but to pass on the SecurityViolationException
+  //   that is emitted when modifying the security descriptor.
+  void setConversationExplicitPermissions(Uuid conversationId, Uuid invokerId, Uuid targetId, int flags)
+      throws SecurityViolationException;
 
 }
