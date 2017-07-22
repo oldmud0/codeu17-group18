@@ -42,9 +42,15 @@ final class View implements BasicView {
   private final static Logger.Log LOG = Logger.newLog(View.class);
 
   private final ConnectionSource source;
+  private User user;
 
   public View(ConnectionSource source) {
     this.source = source;
+  }
+
+  public View(View view, User user) {
+    this(view.source);
+    this.user = user;
   }
 
   @Override

@@ -34,9 +34,15 @@ final class Controller implements BasicController {
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
 
   private final ConnectionSource source;
+  private User user;
 
   public Controller(ConnectionSource source) {
     this.source = source;
+  }
+
+  public Controller(Controller controller, User user) {
+    this(controller.source);
+    this.user = user;
   }
 
   @Override

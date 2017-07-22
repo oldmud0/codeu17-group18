@@ -27,11 +27,12 @@ import java.util.HashSet;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.util.Iterator;
-import codeu.chat.client.core.Context;
-import codeu.chat.client.core.ConversationContext;
-import codeu.chat.client.core.MessageContext;
-import codeu.chat.client.core.UserContext;
+
 import codeu.chat.common.VersionInfo;
+import codeu.chat.contexts.Context;
+import codeu.chat.contexts.ConversationContext;
+import codeu.chat.contexts.MessageContext;
+import codeu.chat.contexts.UserContext;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Tokenizer;
 import codeu.chat.common.VersionInfo;
