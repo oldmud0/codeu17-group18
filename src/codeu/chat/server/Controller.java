@@ -23,6 +23,8 @@ import codeu.chat.common.Message;
 import codeu.chat.common.RandomUuidGenerator;
 import codeu.chat.common.RawController;
 import codeu.chat.common.User;
+import codeu.chat.security.ConversationSecurityDescriptor;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
@@ -149,6 +151,15 @@ public final class Controller implements RawController, BasicController {
     String str = "";
     return str;
   }
+  
+  @Override
+  public void setConversationExplicitPermissions(Uuid conversationId, Uuid invokerId, Uuid targetId, int flags)
+  		throws SecurityViolationException {
+  	ConversationHeader header = model.conversationById().first(conversationId);
+  	ConversationSecurityDescriptor descrip = header.security;
+  	descrip.setPermissions(invokerId, targetId, flags);	
+  }
+  
 
 
   @Override
@@ -191,5 +202,7 @@ public final class Controller implements RawController, BasicController {
   }
 
   private boolean isIdFree(Uuid id) { return !isIdInUse(id); }
+
+
 
 }
