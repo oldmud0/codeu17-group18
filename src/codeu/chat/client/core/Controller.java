@@ -23,6 +23,7 @@ import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.User;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Uuid;

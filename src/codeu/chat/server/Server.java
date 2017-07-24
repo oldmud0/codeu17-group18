@@ -36,6 +36,7 @@ import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
+import codeu.chat.server.contexts.ConversationContext;
 import codeu.chat.util.InterestInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
@@ -44,6 +45,7 @@ import codeu.chat.util.Timeline;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.Connection;
 import codeu.chat.security.ConversationSecurityDescriptor;
+import codeu.chat.security.SecurityViolationException;
 
 public final class Server {
 
@@ -364,7 +366,7 @@ public final class Server {
         final int flag = Serializers.INTEGER.read(in);
         ConversationContext invokerContext = new ConversationContext(invokerUser, convoHeader, view, controller);
         try {
-          invokerContext.setPermissions(targetId, flag);
+          invokerContext.setSecurityFlags(targetId, flag);
           Serializers.INTEGER.write(out, NetworkCode.NEW_ACCESS_CONTROL_RESPONSE);
         } catch (SecurityViolationException e) {
           LOG.error("Security violation occured by user: " + invokerUser.name);
