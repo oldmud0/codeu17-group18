@@ -357,7 +357,6 @@ public final class Server {
     this.commands.put(NetworkCode.NEW_ACCESS_CONTROL_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-        Serializers.INTEGER.write(out, NetworkCode.NEW_ACCESS_CONTROL_RESPONSE);
         final Uuid convoId = Uuid.SERIALIZER.read(in);
         final ConversationHeader convoHeader = view.findConversation(convoId);
         final Uuid invokerID = Uuid.SERIALIZER.read(in);
@@ -369,7 +368,7 @@ public final class Server {
           invokerContext.setSecurityFlags(targetId, flag);
           Serializers.INTEGER.write(out, NetworkCode.NEW_ACCESS_CONTROL_RESPONSE);
         } catch (SecurityViolationException e) {
-          LOG.error("Security violation occured by user: " + invokerUser.name, e);
+          LOG.error(e, "Security violation occured by user: " + invokerUser.name);
           Serializers.INTEGER.write(out, NetworkCode.ERR_SECURITY_VIOLATION);
         }
       }

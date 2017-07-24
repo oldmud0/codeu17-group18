@@ -43,6 +43,7 @@ public class ConversationContext extends codeu.chat.contexts.ConversationContext
   public void setSecurityFlags(Uuid id, int flags) throws SecurityViolationException {
     if (conversation.security.hasFlags(user.id, ConversationSecurityFlags.MODIFY_SECURITY)) {
       super.setSecurityFlags(id, flags);
+      return;
     }
     throw new SecurityViolationException();
   }
