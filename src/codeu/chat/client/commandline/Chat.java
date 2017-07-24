@@ -39,6 +39,7 @@ import codeu.chat.util.Tokenizer;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.InterestInfo;
+import codeu.chat.security.ConversationSecurityPresets;
 
 public final class Chat {
 
@@ -558,8 +559,16 @@ public final class Chat {
       public void invoke(List<String> args) {
         try {
             final Uuid id = Uuid.parse(args.remove(0));
-            final int flags = Integer.parseInt(args.remove(0));
-
+            final String preset = (args.remove(0)).toLowerCase();
+            int flags;
+            if(preset.equals("owner")) {
+              flags = ConversationSecurityPresets.OWNER;
+            } else if (preset.equals("member")) {
+              flags = ConversationSecurityPresets.MEMBER;
+            } else {
+              System.out.println("ERROR: Please enter a valid security preset.");
+              return;
+            }
             if (id != null) {
               conversation.setSecurityFlags(id, flags);
             }

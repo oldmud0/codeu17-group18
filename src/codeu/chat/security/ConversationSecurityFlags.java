@@ -8,5 +8,5 @@ public final class ConversationSecurityFlags {
     EDIT_MESSAGES   = 1 << 3,
     READ_SECURITY   = 1 << 4,
     MODIFY_SECURITY = 1 << 5,
-    FULL_ACCESS     = 0xFFFF_FFFF;
+    FULL_ACCESS     = 0x7FFF_FFFF;
 }

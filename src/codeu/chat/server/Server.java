@@ -369,7 +369,7 @@ public final class Server {
           invokerContext.setSecurityFlags(targetId, flag);
           Serializers.INTEGER.write(out, NetworkCode.NEW_ACCESS_CONTROL_RESPONSE);
         } catch (SecurityViolationException e) {
-          LOG.error("Security violation occured by user: " + invokerUser.name);
+          LOG.error("Security violation occured by user: " + invokerUser.name, e);
           Serializers.INTEGER.write(out, NetworkCode.ERR_SECURITY_VIOLATION);
         }
       }
