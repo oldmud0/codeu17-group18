@@ -70,6 +70,7 @@ public final class Chat {
     for (String token = tokenizer.next(); token != null; token = tokenizer.next()) {
       args.add(token);
     }
+    if(args.isEmpty()) return true;
     final String command = args.remove(0);
 
     // Because "exit" and "back" are applicable to every panel, handle
