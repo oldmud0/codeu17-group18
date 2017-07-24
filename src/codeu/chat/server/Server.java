@@ -43,6 +43,7 @@ import codeu.chat.util.Time;
 import codeu.chat.util.Timeline;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.Connection;
+import codeu.chat.security.ConversationSecurityDescriptor;
 
 public final class Server {
 
@@ -349,6 +350,26 @@ public final class Server {
         }
         Serializers.INTEGER.write(out, NetworkCode.GET_CONVO_STATUS_UPDATE_RESPONSE);
         Serializers.STRING.write(out, convoStatusUpdate);
+      }
+    });
+    this.commands.put(NetworkCode.NEW_ACCESS_CONTROL_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+        Serializers.INTEGER.write(out, NetworkCode.NEW_ACCESS_CONTROL_RESPONSE);
+        final Uuid convoId = Uuid.SERIALIZER.read(in);
+        final ConversationHeader convoHeader = view.findConversation(convoId);
+        final Uuid invokerID = Uuid.SERIALIZER.read(in);
+        final User invokerUser = view.findUser(invokerID);
+        final Uuid targetId = Uuid.SERIALIZER.read(in);
+        final int flag = Serializers.INTEGER.read(in);
+        ConversationContext invokerContext = new ConversationContext(invokerUser, convoHeader, view, controller);
+        try {
+          invokerContext.setPermissions(targetId, flag);
+          Serializers.INTEGER.write(out, NetworkCode.NEW_ACCESS_CONTROL_RESPONSE);
+        } catch (SecurityViolationException e) {
+          LOG.error("Security violation occured by user: " + invokerUser.name);
+          Serializers.INTEGER.write(out, NetworkCode.ERR_SECURITY_VIOLATION);
+        }
       }
     });
 
