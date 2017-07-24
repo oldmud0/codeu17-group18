@@ -218,7 +218,7 @@ final class Controller implements BasicController {
   }
 
   @Override
-  public void setConversationExplicitPermissions(Uuid convoID, Uuid invoker, Uuid target, int flags) {
+  public void setConversationExplicitPermissions(Uuid convoID, Uuid invoker, Uuid target, int flags) throws SecurityViolationException {
 
     try (final Connection connection = source.connect()) {
 
@@ -229,8 +229,11 @@ final class Controller implements BasicController {
       Serializers.INTEGER.write(connection.out(), flags);
 
       LOG.info("SetConversationExplicitPermissions: Request completed.");
-      if (Serializers.INTEGER.read(connection.in()) == NetworkCode.NEW_ACCESS_CONTROL_RESPONSE) {
+      int returnCode = Serializers.INTEGER.read(connection.in());
+      if (returnCode == NetworkCode.NEW_ACCESS_CONTROL_RESPONSE) {
         LOG.info("SetConversationExplicitPermissions: Response completed.");
+      } else if (returnCode == NetworkCode.ERR_SECURITY_VIOLATION) {
+        throw new SecurityViolationException();
       } else {
         LOG.error("Response from server failed.");
       }
