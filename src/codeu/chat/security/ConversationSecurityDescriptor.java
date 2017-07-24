@@ -16,10 +16,10 @@ public class ConversationSecurityDescriptor {
   public void setPermissions(Uuid invoker, Uuid target, int flags) throws SecurityViolationException {
     if (hasFlags(invoker, ConversationSecurityFlags.MODIFY_SECURITY) == false) {
       throw new SecurityViolationException("You do not have access to set permissions.");
-    } else if (getEffectivePermissions(invoker) <= getEffectivePermissions(target)) {
-      throw new SecurityViolationException("The user you have to tried to change has equal or higher permissions.");
     } else if (invoker.equals(target)) {
       throw new SecurityViolationException("You cannot change your own permissions.");
+    } else if (getEffectivePermissions(invoker) <= getEffectivePermissions(target)) {
+      throw new SecurityViolationException("The user you have to tried to change has equal or higher permissions.");
     } else {
       explicitSecurity.put(target, flags);
     }
@@ -28,10 +28,10 @@ public class ConversationSecurityDescriptor {
   public void resetPermissions(Uuid invoker, Uuid target) throws SecurityViolationException {
     if (hasFlags(invoker, ConversationSecurityFlags.MODIFY_SECURITY) == false) {
       throw new SecurityViolationException("You do not have access to set permissions.");
-    } else if (getEffectivePermissions(invoker) <= getEffectivePermissions(target)) {
-      throw new SecurityViolationException("The user you have to tried to change has equal or higher permissions.");
     } else if (invoker.equals(target)) {
       throw new SecurityViolationException("You cannot change your own permissions.");
+    } else if (getEffectivePermissions(invoker) <= getEffectivePermissions(target)) {
+      throw new SecurityViolationException("The user you have to tried to change has equal or higher permissions.");
     } else {
       explicitSecurity.remove(target);
     }
