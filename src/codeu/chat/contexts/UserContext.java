@@ -26,8 +26,8 @@ import codeu.chat.util.Uuid;
 public class UserContext {
 
   public final User user;
-  private final BasicView view;
-  private final BasicController controller;
+  protected final BasicView view;
+  protected final BasicController controller;
 
   public UserContext(User user, BasicView view, BasicController controller) {
     this.user = user;

@@ -25,8 +25,8 @@ import codeu.chat.util.ServerInfo;
 
 public abstract class Context {
 
-  private BasicView view;
-  private BasicController controller;
+  protected BasicView view;
+  protected BasicController controller;
   
   public Context(BasicView view, BasicController controller) {
     this.view = view;

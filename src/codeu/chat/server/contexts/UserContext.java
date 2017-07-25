@@ -1,9 +1,15 @@
 package codeu.chat.server.contexts;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import codeu.chat.common.BasicController;
 import codeu.chat.common.BasicView;
+import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.User;
 import codeu.chat.contexts.ConversationContext;
+import codeu.chat.security.ConversationSecurityDescriptor;
+import codeu.chat.security.ConversationSecurityFlags;
 import codeu.chat.util.Uuid;
 
 public class UserContext extends codeu.chat.contexts.UserContext {
@@ -19,7 +25,13 @@ public class UserContext extends codeu.chat.contexts.UserContext {
 
   @Override
   public Iterable<ConversationContext> conversations() {
-    return super.conversations();
+    final Collection<ConversationContext> all = new ArrayList<>();
+    for (final ConversationHeader conversation : view.getConversations()) {
+      if (conversation.security.hasFlags(user.id, ConversationSecurityFlags.VIEW_MESSAGES)) {
+        all.add(new ConversationContext(user, conversation, view, controller));
+      }
+    }
+    return all;
   }
 
   @Override

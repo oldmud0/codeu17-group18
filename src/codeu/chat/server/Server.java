@@ -21,11 +21,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
@@ -35,8 +33,10 @@ import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.server.PersistenceFileSkeleton.ServerInfo;
 import codeu.chat.server.contexts.ConversationContext;
+import codeu.chat.server.contexts.UserContext;
 import codeu.chat.util.InterestInfo;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
@@ -44,8 +44,6 @@ import codeu.chat.util.Time;
 import codeu.chat.util.Timeline;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.Connection;
-import codeu.chat.security.ConversationSecurityDescriptor;
-import codeu.chat.security.SecurityViolationException;
 
 public final class Server {
 
@@ -88,28 +86,36 @@ public final class Server {
     this.commands.put(NetworkCode.NEW_MESSAGE_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-
         final Uuid author = Uuid.SERIALIZER.read(in);
         User signedInUser = view.findUser(author);
         final Uuid conversation = Uuid.SERIALIZER.read(in);
         final String content = Serializers.STRING.read(in);
         ConversationHeader convo = view.findConversation(conversation);
-        // for user status update
-        userInterests.get(signedInUser).addModifiedConversation(convo.title);
-        // for convo status update
-        for (User temp : userInterests.keySet()){
-          if (userInterests.get(temp).getInterestedConvos().isEmpty() == false){
-            if(userInterests.get(temp).getInterestedConvos().containsKey(convo.title)){
-              userInterests.get(temp).addToMessageCount(convo.title);
+        ConversationContext conversationContext = new ConversationContext(signedInUser, convo, view, controller);
+
+        try {
+          final codeu.chat.contexts.MessageContext msgContext = conversationContext.add(content);
+          final Message message = msgContext.message;
+
+          // for user status update
+          userInterests.get(signedInUser).addModifiedConversation(convo.title);
+          // for convo status update
+          for (User temp : userInterests.keySet()) {
+            if (userInterests.get(temp).getInterestedConvos().isEmpty() == false) {
+              if (userInterests.get(temp).getInterestedConvos().containsKey(convo.title)) {
+                userInterests.get(temp).addToMessageCount(convo.title);
+              }
             }
           }
+
+          Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
+          Serializers.nullable(Message.SERIALIZER).write(out, message);
+
+          timeline.scheduleNow(createSendToRelayEvent(author, conversation, message.id));
+        } catch (SecurityViolationException e) {
+          LOG.error(e, "Security violation occured by user: " + signedInUser.name);
+          Serializers.INTEGER.write(out, NetworkCode.ERR_SECURITY_VIOLATION);
         }
-        final Message message = controller.newMessage(author, conversation, content);
-
-        Serializers.INTEGER.write(out, NetworkCode.NEW_MESSAGE_RESPONSE);
-        Serializers.nullable(Message.SERIALIZER).write(out, message);
-
-        timeline.scheduleNow(createSendToRelayEvent(author, conversation, message.id));
       }
     });
 
@@ -163,8 +169,13 @@ public final class Server {
     this.commands.put(NetworkCode.GET_ALL_CONVERSATIONS_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-
-        final Collection<ConversationHeader> conversations = view.getConversations();
+        final Uuid userId = Uuid.SERIALIZER.read(in);
+        final UserContext user = new UserContext(view.findUser(userId), view, controller);
+        final Collection<ConversationHeader> conversations = new ArrayList<>(); 
+        final Iterable<codeu.chat.contexts.ConversationContext> conversationContexts = user.conversations();
+        for (codeu.chat.contexts.ConversationContext context : conversationContexts) {
+          conversations.add(context.conversation);
+        }
 
         Serializers.INTEGER.write(out, NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE);
         Serializers.collection(ConversationHeader.SERIALIZER).write(out, conversations);
@@ -179,7 +190,8 @@ public final class Server {
     this.commands.put(NetworkCode.GET_CONVERSATIONS_BY_ID_REQUEST, new Command() {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
-
+        final Uuid userId = Uuid.SERIALIZER.read(in);
+        //final UserContext user = new UserContext(view.findUser(userId), view, controller);
         final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
         final Collection<ConversationPayload> conversations = view.getConversationPayloads(ids);
 

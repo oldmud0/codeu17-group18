@@ -28,11 +28,12 @@ import java.util.ArrayList;
 import java.io.IOException;
 import java.util.Iterator;
 
+import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.contexts.Context;
 import codeu.chat.contexts.ConversationContext;
 import codeu.chat.contexts.MessageContext;
-import codeu.chat.contexts.UserContext;
+import codeu.chat.client.core.UserContext;
 import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Tokenizer;
@@ -144,7 +145,7 @@ public final class Chat {
     panel.register("u-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        for (final UserContext user : context.allUsers()) {
+        for (final codeu.chat.contexts.UserContext user : context.allUsers()) {
           System.out.format(
               "USER %s (UUID:%s)\n",
               user.user.name,
@@ -196,9 +197,9 @@ public final class Chat {
       // Find the first user with the given name and return a user context
       // for that user. If no user is found, the function will return null.
       private UserContext findUser(String name) {
-        for (final UserContext user : context.allUsers()) {
+        for (final codeu.chat.contexts.UserContext user : context.allUsers()) {
           if (user.user.name.equals(name)) {
-            return user;
+            return (UserContext) user;
           }
         }
         return null;
@@ -428,10 +429,7 @@ public final class Chat {
     panel.register("c-user-statusUpdate", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        //final String name = args.remove(0);
-        //final UserContext user = findUser(name);
         final Uuid signedInId = user.user.id;
-
         final String userStatusUpdate = user.getAllConvosFromServer(signedInId);
         if (userStatusUpdate == null) {
           System.out.println("ERROR: No user status update returned");
@@ -439,20 +437,7 @@ public final class Chat {
           System.out.print(userStatusUpdate);
         }
       }
-
-      // Find the first user with the given name and return a user context
-      // for that user. If no user is found, the function will return null.
-      private UserContext findUser(String name) {
-        for (final UserContext user : context2.allUsers()) {
-          if (user.user.name.equals(name)) {
-            return user;
-          }
-        }
-        return null;
-      }
     });
-		
-		
 
     // INFO
     //
@@ -490,7 +475,7 @@ public final class Chat {
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
         System.out.println("    Add a new message to the current conversation as the current user.");
-        System.out.println("  c-set-access <user id> <none|member|owner>");
+        System.out.println("  c-set-access <name> <none|member|owner>");
         System.out.println("    Set the access level of the current conversation to the specified preset for a user.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
@@ -559,25 +544,35 @@ public final class Chat {
       @Override
       public void invoke(List<String> args) {
         try {
-            final Uuid id = Uuid.parse(args.remove(0));
+            final String userSearched = args.remove(0);
             final String preset = (args.remove(0)).toLowerCase();
+            User targetUser = null;
+            
+            for (final codeu.chat.contexts.UserContext user : context2.allUsers()) {
+              if (user.user.name.equalsIgnoreCase(userSearched)) {
+                targetUser = user.user;
+              }
+            }
+                
             int flags;
             if(preset.equals("owner")) {
               flags = ConversationSecurityPresets.OWNER;
             } else if (preset.equals("member")) {
               flags = ConversationSecurityPresets.MEMBER;
+            } else if (preset.equals("none")) {
+              flags = ConversationSecurityPresets.NONE;
             } else {
               System.out.println("ERROR: Please enter a valid security preset.");
               return;
             }
-            if (id != null) {
-              conversation.setSecurityFlags(id, flags);
+            if (targetUser != null) {
+              conversation.setSecurityFlags(targetUser.id, flags);
             }
             else {
-              System.out.println("ERROR: Missing <uuid>");
+              System.out.println("ERROR: Missing <name>");
             }
-        } catch (IOException e) {
-          System.out.println("ERROR: Unable to parse Uuid");
+        } catch (IndexOutOfBoundsException e) {
+          System.out.println("ERROR: Unable to find an argument.");
         } catch (SecurityViolationException e) {
           System.out.println("You are not allowed to change the permissions of this conversation.");
         }
