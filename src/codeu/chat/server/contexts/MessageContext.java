@@ -11,11 +11,13 @@ public class MessageContext extends codeu.chat.contexts.MessageContext {
 
   @Override
   public codeu.chat.contexts.MessageContext next() {
+    // TODO add security checks
     return super.next();
   }
 
   @Override
   public codeu.chat.contexts.MessageContext previous() {
+    // TODO add security checks
     return super.previous();
   }
 

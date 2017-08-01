@@ -8,7 +8,6 @@ import codeu.chat.common.BasicView;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.User;
 import codeu.chat.contexts.ConversationContext;
-import codeu.chat.security.ConversationSecurityDescriptor;
 import codeu.chat.security.ConversationSecurityFlags;
 import codeu.chat.util.Uuid;
 
@@ -36,31 +35,37 @@ public class UserContext extends codeu.chat.contexts.UserContext {
 
   @Override
   public String getAllConvosFromServer(Uuid signedInId) {
+    // TODO add security checks
     return super.getAllConvosFromServer(signedInId);
   }
 
   @Override
   public String getNumMessagesFromServer(Uuid signedInId) {
+    // TODO add security checks
     return super.getNumMessagesFromServer(signedInId);
   }
 
   @Override
   public String createUserInterest(String name) {
+    // TODO add security checks
     return super.createUserInterest(name);
   }
 
   @Override
   public String createConvoInterest(String name) {
+    // TODO add security checks
     return super.createConvoInterest(name);
   }
 
   @Override
   public String removeUserInterest(String name) {
+    // TODO add security checks
     return super.removeUserInterest(name);
   }
 
   @Override
   public String removeConvoInterest(String name) {
+    // TODO add security checks
     return super.removeConvoInterest(name);
   }
 
