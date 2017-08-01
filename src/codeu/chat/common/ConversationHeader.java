@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import codeu.chat.security.ConversationSecurityDescriptor;
 import codeu.chat.util.Serializer;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Time;
@@ -54,6 +55,7 @@ public final class ConversationHeader {
   public final Uuid owner;
   public final Time creation;
   public final String title;
+  public final ConversationSecurityDescriptor security;
 
   public ConversationHeader(Uuid id, Uuid owner, Time creation, String title) {
 
@@ -61,6 +63,7 @@ public final class ConversationHeader {
     this.owner = owner;
     this.creation = creation;
     this.title = title;
+    this.security = new ConversationSecurityDescriptor(owner);
 
   }
 }

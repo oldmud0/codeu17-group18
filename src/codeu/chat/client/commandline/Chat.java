@@ -27,16 +27,20 @@ import java.util.HashSet;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.util.Iterator;
-import codeu.chat.client.core.Context;
-import codeu.chat.client.core.ConversationContext;
-import codeu.chat.client.core.MessageContext;
-import codeu.chat.client.core.UserContext;
+
+import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
+import codeu.chat.contexts.Context;
+import codeu.chat.contexts.ConversationContext;
+import codeu.chat.contexts.MessageContext;
+import codeu.chat.client.core.UserContext;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Tokenizer;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.InterestInfo;
+import codeu.chat.security.ConversationSecurityPresets;
 
 public final class Chat {
 
@@ -67,6 +71,7 @@ public final class Chat {
     for (String token = tokenizer.next(); token != null; token = tokenizer.next()) {
       args.add(token);
     }
+    if(args.isEmpty()) return true;
     final String command = args.remove(0);
 
     // Because "exit" and "back" are applicable to every panel, handle
@@ -140,7 +145,7 @@ public final class Chat {
     panel.register("u-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        for (final UserContext user : context.allUsers()) {
+        for (final codeu.chat.contexts.UserContext user : context.allUsers()) {
           System.out.format(
               "USER %s (UUID:%s)\n",
               user.user.name,
@@ -192,9 +197,9 @@ public final class Chat {
       // Find the first user with the given name and return a user context
       // for that user. If no user is found, the function will return null.
       private UserContext findUser(String name) {
-        for (final UserContext user : context.allUsers()) {
+        for (final codeu.chat.contexts.UserContext user : context.allUsers()) {
           if (user.user.name.equals(name)) {
-            return user;
+            return (UserContext) user;
           }
         }
         return null;
@@ -424,10 +429,7 @@ public final class Chat {
     panel.register("c-user-statusUpdate", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        //final String name = args.remove(0);
-        //final UserContext user = findUser(name);
         final Uuid signedInId = user.user.id;
-
         final String userStatusUpdate = user.getAllConvosFromServer(signedInId);
         if (userStatusUpdate == null) {
           System.out.println("ERROR: No user status update returned");
@@ -435,20 +437,7 @@ public final class Chat {
           System.out.print(userStatusUpdate);
         }
       }
-
-      // Find the first user with the given name and return a user context
-      // for that user. If no user is found, the function will return null.
-      private UserContext findUser(String name) {
-        for (final UserContext user : context2.allUsers()) {
-          if (user.user.name.equals(name)) {
-            return user;
-          }
-        }
-        return null;
-      }
     });
-		
-		
 
     // INFO
     //
@@ -486,6 +475,8 @@ public final class Chat {
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
         System.out.println("    Add a new message to the current conversation as the current user.");
+        System.out.println("  c-set-access <name> <none|member|owner>");
+        System.out.println("    Set the access level of the current conversation to the specified preset for a user.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
         System.out.println("  back");
@@ -503,18 +494,22 @@ public final class Chat {
     panel.register("m-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        System.out.println("--- start of conversation ---");
-        for (MessageContext message = conversation.firstMessage();
-                            message != null;
-                            message = message.next()) {
-          System.out.println();
-          System.out.format("USER : %s\n", message.message.author);
-          System.out.format("SENT : %s\n", message.message.creation);
-          System.out.println();
-          System.out.println(message.message.content);
-          System.out.println();
+        try {
+          System.out.println("--- start of conversation ---");
+          for (MessageContext message = conversation.firstMessage();
+                              message != null;
+                              message = message.next()) {
+            System.out.println();
+            System.out.format("USER : %s\n", message.message.author);
+            System.out.format("SENT : %s\n", message.message.creation);
+            System.out.println();
+            System.out.println(message.message.content);
+            System.out.println();
+          }
+          System.out.println("---  end of conversation  ---");
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to view this conversation.");
         }
-        System.out.println("---  end of conversation  ---");
       }
     });
 
@@ -526,11 +521,59 @@ public final class Chat {
     panel.register("m-add", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-        final String message = args.remove(0);
-        if (message.length() > 0) {
-          conversation.add(message);
-        } else {
-          System.out.println("ERROR: Messages must contain text");
+        try {
+          final String message = args.remove(0);
+          if (message.length() > 0) {
+            conversation.add(message);
+          } else {
+            System.out.println("ERROR: Messages must contain text");
+          }
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to add messages to this conversation.");
+        }
+      }
+    });
+
+    // C-SET-ACCESS (set access for user)
+    //
+    // Add a command that will set access for another user in a conversation
+    // if the logged in user has the correct flags
+    // User must type "c-set-access <id> <flag>" while on the user panel.
+    //
+    panel.register("c-set-access", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        try {
+            final String userSearched = args.remove(0);
+            final String preset = (args.remove(0)).toLowerCase();
+            User targetUser = null;
+            
+            for (final codeu.chat.contexts.UserContext user : context2.allUsers()) {
+              if (user.user.name.equalsIgnoreCase(userSearched)) {
+                targetUser = user.user;
+              }
+            }
+                
+            int flags;
+            if(preset.equals("owner")) {
+              flags = ConversationSecurityPresets.OWNER;
+            } else if (preset.equals("member")) {
+              flags = ConversationSecurityPresets.MEMBER;
+            } else if (preset.equals("none")) {
+              flags = ConversationSecurityPresets.NONE;
+            } else {
+              System.out.println("ERROR: Please enter a valid security preset.");
+              return;
+            }
+            if (targetUser != null) {
+              conversation.setSecurityFlags(targetUser.id, flags);
+            } else {
+              System.out.println("ERROR: Missing <name>");
+            }
+        } catch (IndexOutOfBoundsException e) {
+          System.out.println("ERROR: Unable to find an argument.");
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to change the permissions of this conversation.");
         }
       }
     });

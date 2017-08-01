@@ -14,29 +14,32 @@
 
 package codeu.chat.client.core;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.Thread;
-
 import codeu.chat.common.BasicController;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.Message;
 import codeu.chat.common.NetworkCode;
 import codeu.chat.common.User;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Serializers;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.connections.Connection;
 import codeu.chat.util.connections.ConnectionSource;
 
-final class Controller implements BasicController {
+public final class Controller implements BasicController {
 
   private final static Logger.Log LOG = Logger.newLog(Controller.class);
 
   private final ConnectionSource source;
+  private User user;
 
   public Controller(ConnectionSource source) {
     this.source = source;
+  }
+
+  public Controller(Controller controller, User user) {
+    this(controller.source);
+    this.user = user;
   }
 
   @Override
@@ -209,5 +212,31 @@ final class Controller implements BasicController {
     }
 
     return response;
+  }
+
+  @Override
+  public void setConversationExplicitPermissions(Uuid convoID, Uuid invoker, Uuid target, int flags) throws SecurityViolationException {
+
+    try (final Connection connection = source.connect()) {
+
+      Serializers.INTEGER.write(connection.out(), NetworkCode.NEW_ACCESS_CONTROL_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), convoID);
+      Uuid.SERIALIZER.write(connection.out(), invoker);
+      Uuid.SERIALIZER.write(connection.out(), target);
+      Serializers.INTEGER.write(connection.out(), flags);
+
+      LOG.info("SetConversationExplicitPermissions: Request completed.");
+      int returnCode = Serializers.INTEGER.read(connection.in());
+      if (returnCode == NetworkCode.NEW_ACCESS_CONTROL_RESPONSE) {
+        LOG.info("SetConversationExplicitPermissions: Response completed.");
+      } else if (returnCode == NetworkCode.ERR_SECURITY_VIOLATION) {
+        throw new SecurityViolationException();
+      } else {
+        LOG.error("Response from server failed.");
+      }
+    } catch (Exception ex) {
+      System.out.println("ERROR: Exception during call on server. Check log for details.");
+      LOG.error(ex, "Exception during call on server.");
+    }
   }
 }

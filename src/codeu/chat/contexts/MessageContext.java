@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package codeu.chat.client.core;
+package codeu.chat.contexts;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -21,7 +21,7 @@ import codeu.chat.common.BasicView;
 import codeu.chat.common.Message;
 import codeu.chat.util.Uuid;
 
-public final class MessageContext {
+public class MessageContext {
 
   public final Message message;
   private final BasicView view;

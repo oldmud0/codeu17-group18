@@ -160,7 +160,7 @@ public class PersistenceWriter {
 
       for (Method method : methods) {
         Type returnType = method.getGenericReturnType();
-        JsonProperty jsonProperty = (JsonProperty) method.getAnnotation(JsonProperty.class);
+        JsonProperty jsonProperty = method.getAnnotation(JsonProperty.class);
         String propertyName = jsonProperty.value();
         LOG.verbose("Method name: %s, returns %s%n", method.getName(), returnType);
 

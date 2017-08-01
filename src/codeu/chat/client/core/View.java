@@ -37,14 +37,20 @@ import codeu.chat.util.connections.ConnectionSource;
 // This is the view component of the Model-View-Controller pattern used by the
 // the client to reterive readonly data from the server. All methods are blocking
 // calls.
-final class View implements BasicView {
+public final class View implements BasicView {
 
   private final static Logger.Log LOG = Logger.newLog(View.class);
 
   private final ConnectionSource source;
+  private User user;
 
   public View(ConnectionSource source) {
     this.source = source;
+  }
+
+  public View(View view, User user) {
+    this(view.source);
+    this.user = user;
   }
 
   @Override
@@ -78,6 +84,7 @@ final class View implements BasicView {
     try (final Connection connection = source.connect()) {
 
       Serializers.INTEGER.write(connection.out(), NetworkCode.GET_ALL_CONVERSATIONS_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), user.id);
 
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_ALL_CONVERSATIONS_RESPONSE) {
         summaries.addAll(Serializers.collection(ConversationHeader.SERIALIZER).read(connection.in()));
@@ -101,6 +108,7 @@ final class View implements BasicView {
     try (final Connection connection = source.connect()) {
 
       Serializers.INTEGER.write(connection.out(), NetworkCode.GET_CONVERSATIONS_BY_ID_REQUEST);
+      Uuid.SERIALIZER.write(connection.out(), user.id);
       Serializers.collection(Uuid.SERIALIZER).write(connection.out(), ids);
 
       if (Serializers.INTEGER.read(connection.in()) == NetworkCode.GET_CONVERSATIONS_BY_ID_RESPONSE) {
