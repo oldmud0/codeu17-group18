@@ -287,6 +287,7 @@ public final class Server {
           userInterests.get(interestUser).resetConvos();
         }
 
+        // Java 8 only
         String makeString = String.join(", ", uniqueConvos);
 
         Serializers.INTEGER.write(out, NetworkCode.GET_USER_STATUS_UPDATE_RESPONSE);
