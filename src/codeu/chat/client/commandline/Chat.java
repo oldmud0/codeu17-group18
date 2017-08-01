@@ -567,8 +567,7 @@ public final class Chat {
             }
             if (targetUser != null) {
               conversation.setSecurityFlags(targetUser.id, flags);
-            }
-            else {
+            } else {
               System.out.println("ERROR: Missing <name>");
             }
         } catch (IndexOutOfBoundsException e) {

@@ -20,6 +20,8 @@ import java.io.InputStreamReader;
 
 import codeu.chat.client.commandline.Chat;
 import codeu.chat.client.core.Context;
+import codeu.chat.client.core.Controller;
+import codeu.chat.client.core.View;
 import codeu.chat.util.Logger;
 import codeu.chat.util.RemoteAddress;
 import codeu.chat.util.connections.ClientConnectionSource;
@@ -46,7 +48,7 @@ final class ClientMain {
     final ConnectionSource source = new ClientConnectionSource(address.host, address.port);
 
     LOG.info("Creating client...");
-    final Chat chat = new Chat(new Context(source));
+    final Chat chat = new Chat(new Context(new View(source), new Controller(source)));
 
     LOG.info("Created client");
 

@@ -6,7 +6,7 @@ import java.util.Map;
 import codeu.chat.util.Uuid;
 
 public class ConversationSecurityDescriptor {
-  private int implicitSecurity;
+  private int implicitSecurity = ConversationSecurityPresets.NONE;
   private Map<Uuid, Integer> explicitSecurity = new HashMap<>();
   
   public ConversationSecurityDescriptor(Uuid owner) {
@@ -14,7 +14,7 @@ public class ConversationSecurityDescriptor {
   }
 
   public void setPermissions(Uuid invoker, Uuid target, int flags) throws SecurityViolationException {
-    if (hasFlags(invoker, ConversationSecurityFlags.MODIFY_SECURITY) == false) {
+    if (!hasFlags(invoker, ConversationSecurityFlags.MODIFY_SECURITY)) {
       throw new SecurityViolationException("You do not have access to set permissions.");
     } else if (invoker.equals(target)) {
       throw new SecurityViolationException("You cannot change your own permissions.");
@@ -26,7 +26,7 @@ public class ConversationSecurityDescriptor {
   }
 
   public void resetPermissions(Uuid invoker, Uuid target) throws SecurityViolationException {
-    if (hasFlags(invoker, ConversationSecurityFlags.MODIFY_SECURITY) == false) {
+    if (!hasFlags(invoker, ConversationSecurityFlags.MODIFY_SECURITY)) {
       throw new SecurityViolationException("You do not have access to set permissions.");
     } else if (invoker.equals(target)) {
       throw new SecurityViolationException("You cannot change your own permissions.");

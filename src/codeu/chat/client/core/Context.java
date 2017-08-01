@@ -5,12 +5,16 @@ import java.util.Collection;
 
 import codeu.chat.common.User;
 import codeu.chat.client.core.UserContext;
-import codeu.chat.util.connections.ConnectionSource;
 
 public class Context extends codeu.chat.contexts.Context {
 
-  public Context(ConnectionSource source) {
-    super(new View(source), new Controller(source));
+  private View view;
+  private Controller controller;
+
+  public Context(View view, Controller controller) {
+    super(view, controller);
+    this.view = view;
+    this.controller = controller;
   }
 
   @Override
@@ -18,14 +22,14 @@ public class Context extends codeu.chat.contexts.Context {
     final User user = controller.newUser(name);
     return user == null ?
         null :
-        new UserContext(user, (View) view, (Controller) controller);
+        new UserContext(user, view, controller);
   }
 
   @Override
   public Iterable<codeu.chat.contexts.UserContext> allUsers() {
     final Collection<codeu.chat.contexts.UserContext> users = new ArrayList<>();
     for (final User user : view.getUsers()) {
-      users.add(new UserContext(user, (View) view, (Controller) controller));
+      users.add(new UserContext(user, view, controller));
     }
     return users;
   }
