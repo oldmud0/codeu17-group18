@@ -191,6 +191,11 @@ public final class Server {
       @Override
       public void onMessage(InputStream in, OutputStream out) throws IOException {
         final Uuid userId = Uuid.SERIALIZER.read(in);
+
+        // XXX: make UserContext work with the user id, so that a security check is available here.
+        // The problem is that this operation is inherently indirect and dubious in motive.
+        // On the client side, there is a totally different approach that is taken to get here.
+
         //final UserContext user = new UserContext(view.findUser(userId), view, controller);
         final Collection<Uuid> ids = Serializers.collection(Uuid.SERIALIZER).read(in);
         final Collection<ConversationPayload> conversations = view.getConversationPayloads(ids);
