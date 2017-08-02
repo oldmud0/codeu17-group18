@@ -160,7 +160,10 @@ public final class Controller implements RawController, BasicController {
   	descrip.setPermissions(invokerId, targetId, flags);	
   }
   
-
+  @Override
+  public void deleteMessage (Uuid conversationId, Uuid messageId, Uuid invokerId) throws SecurityViolationException {
+	  
+  }
 
   @Override
   public ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime) {

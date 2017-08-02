@@ -129,4 +129,7 @@ public final class Model {
   public StoreAccessor<String, Message> messageByText() {
     return messageByText;
   }
+  
+  public Message remove() {
+  }
 }

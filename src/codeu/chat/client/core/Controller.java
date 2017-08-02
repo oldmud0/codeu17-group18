@@ -239,4 +239,27 @@ public final class Controller implements BasicController {
       LOG.error(ex, "Exception during call on server.");
     }
   }
+  
+  @Override
+  public void deleteMessage (Uuid convoId, Uuid messageId, Uuid invokerId) throws SecurityViolationException {
+	  try (final Connection connection = source.connect()) {
+		  Serializers.INTEGER.write(connection.out(), NetworkCode.DELETE_MESSAGE_REQUEST);
+		  Uuid.SERIALIZER.write(connection.out(), convoId);
+	      Uuid.SERIALIZER.write(connection.out(), messageId);
+	      Uuid.SERIALIZER.write(connection.out(), invokerId);
+	      
+	      LOG.info("DeleteMessage: Request completed.");
+	      int returnCode = Serializers.INTEGER.read(connection.in());
+	      if (returnCode == NetworkCode.DELETE_MESSAGE_RESPONSE) {
+	        LOG.info("DeleteMessage: Response completed.");
+	      } else if (returnCode == NetworkCode.ERR_SECURITY_VIOLATION) {
+	        throw new SecurityViolationException();
+	      } else {
+	        LOG.error("Response from server failed.");
+	      }	      
+	  } catch (Exception ex) {
+		  System.out.println("ERROR: Exception during call on server. Check log for details.");
+	      LOG.error(ex, "Exception during call on server.");
+	  }
+  }
 }
