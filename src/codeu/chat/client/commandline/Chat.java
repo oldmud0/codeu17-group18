@@ -14,34 +14,23 @@
 
 package codeu.chat.client.commandline;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Stack;
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.ArrayList;
-import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
 
-import codeu.chat.common.Message;
+import codeu.chat.client.core.UserContext;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.contexts.Context;
 import codeu.chat.contexts.ConversationContext;
 import codeu.chat.contexts.MessageContext;
-import codeu.chat.client.core.UserContext;
+import codeu.chat.security.ConversationSecurityPresets;
 import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Tokenizer;
-import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
-import codeu.chat.util.InterestInfo;
-import codeu.chat.security.ConversationSecurityPresets;
 
 public final class Chat {
 
@@ -264,6 +253,8 @@ public final class Chat {
         System.out.println("  c-add <title>");
         System.out.println(
             "    Add a new conversation with the given title and join it as the current user.");
+        System.out.println("  c-delete <id>");
+        System.out.println("    Delete a conversation.");
         System.out.println("  c-add-userInterest <name>");
         System.out.println("    Add this user with the given name to user's interest system.");
         System.out.println("  c-add-convoInterest <title>");
@@ -383,6 +374,41 @@ public final class Chat {
           }
         } else {
           System.out.println("ERROR: Missing <title>");
+        }
+      }
+    });
+
+    // C-DELETE (delete conversation)
+    //
+    // Add a command that will delete a conversation when the user
+    // enters "c-delete" on the user panel and specifies the UUID of the
+    // conversation as a parameter.
+    panel.register("c-delete", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        try {
+          final Uuid conversationId = Uuid.parse(args.remove(0));
+          ConversationContext targetConversation = null;
+          if (conversationId != null) {
+            // Find the conversation
+            for (ConversationContext convo : user.conversations().iterator()) {
+              ConversationContext convo = convos.next();
+              if (convo.conversation.id.equals(conversationId)) {
+                targetConversation = convo;
+              }
+            }
+            if (targetConversation != null) {
+              user.deleteConversation(targetConversation.conversation.id);
+            } else {
+              System.out.println("ERROR: Conversation of specified ID was not found.");
+            }
+          } else {
+            System.out.println("ERROR: Conversation ID cannot be null.");
+          }
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to delete this conversation.");
+        } catch (IOException | IndexOutOfBoundsException e) {
+          System.out.println("Conversation ID could not be parsed.");
         }
       }
     });

@@ -201,6 +201,11 @@ public final class Controller implements RawController, BasicController {
       }
     }
   }
+  
+  @Override
+  public void deleteConversation(Uuid conversationId) throws SecurityViolationException {
+    
+  }
 
   @Override
   public ConversationHeader newConversation(Uuid id, String title, Uuid owner, Time creationTime) {
@@ -242,7 +247,5 @@ public final class Controller implements RawController, BasicController {
   }
 
   private boolean isIdFree(Uuid id) { return !isIdInUse(id); }
-
-
 
 }

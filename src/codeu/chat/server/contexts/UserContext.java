@@ -9,6 +9,7 @@ import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.User;
 import codeu.chat.contexts.ConversationContext;
 import codeu.chat.security.ConversationSecurityFlags;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Uuid;
 
 public class UserContext extends codeu.chat.contexts.UserContext {
@@ -67,6 +68,15 @@ public class UserContext extends codeu.chat.contexts.UserContext {
   public String removeConvoInterest(String name) {
     // TODO add security checks
     return super.removeConvoInterest(name);
+  }
+
+  @Override
+  public void deleteConversation(Uuid conversationId) throws SecurityViolationException {
+    if (conversation.security.hasFlags(user.id, ConversationSecurityFlags.DELETE_MESSAGES)) {
+      super.deleteConversation(conversationId);
+      return;
+    }
+    throw new SecurityViolationException();
   }
 
 }
