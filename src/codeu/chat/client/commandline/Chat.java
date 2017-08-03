@@ -391,8 +391,7 @@ public final class Chat {
           ConversationContext targetConversation = null;
           if (conversationId != null) {
             // Find the conversation
-            for (ConversationContext convo : user.conversations().iterator()) {
-              ConversationContext convo = convos.next();
+            for (ConversationContext convo : user.conversations()) {
               if (convo.conversation.id.equals(conversationId)) {
                 targetConversation = convo;
               }

@@ -72,7 +72,15 @@ public class UserContext extends codeu.chat.contexts.UserContext {
 
   @Override
   public void deleteConversation(Uuid conversationId) throws SecurityViolationException {
-    if (conversation.security.hasFlags(user.id, ConversationSecurityFlags.DELETE_MESSAGES)) {
+    ConversationContext foundConversation = null;
+    for (ConversationContext convo : conversations()) {
+      if (convo.conversation.id.equals(conversationId)) {
+        foundConversation = convo;
+      }
+    }
+    // HACK: I want to throw an IllegalArgumentException but without changing the method signature
+    if (foundConversation == null) return;
+    if (foundConversation.conversation.security.hasFlags(user.id, ConversationSecurityFlags.DELETE_MESSAGES)) {
       super.deleteConversation(conversationId);
       return;
     }
