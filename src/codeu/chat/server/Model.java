@@ -118,6 +118,12 @@ public final class Model {
     messageByText.insert(message.content, message);
   }
 
+  public void remove(Message message) {
+    messageById.remove(message.id);
+    messageByTime.remove(message.creation);
+    messageByText.remove(message.content);
+  }
+
   public StoreAccessor<Uuid, Message> messageById() {
     return messageById;
   }
@@ -128,8 +134,5 @@ public final class Model {
 
   public StoreAccessor<String, Message> messageByText() {
     return messageByText;
-  }
-  
-  public Message remove() {
   }
 }

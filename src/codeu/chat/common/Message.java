@@ -55,7 +55,7 @@ public final class Message {
   };
 
   public final Uuid id;
-  public final Uuid previous;
+  public Uuid previous;
   public final Time creation;
   public final Uuid author;
   public final String content;

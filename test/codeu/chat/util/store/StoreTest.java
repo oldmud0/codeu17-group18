@@ -147,6 +147,35 @@ public final class StoreTest {
     assertTrue(store.first(4) == 40);
   }
 
+  @Test
+  public void testDelete() {
+    store.insert(0, 0);
+    store.insert(20, 2);
+    store.insert(25, 23);
+    store.insert(2, 9);
+
+    assertTrue(store.remove(20) == 2);
+
+    assertTrue(store.first(0) == 0);
+    assertTrue(store.first(2) == 9);
+    assertTrue(store.first(25) == 23);
+  }
+  
+  @Test
+  public void testDeleteMultipleValsPerKey() {
+    store.insert(0, 0);
+    store.insert(20, 2);
+    store.insert(25, 23);
+    store.insert(20, 5);
+    store.insert(2, 9);
+    
+    store.remove(20);
+    
+    final int[] order = { 0, 9, 5, 23 };
+    //store.all().iterator().forEachRemaining(item -> System.out.print(item + ", "));
+    assertOrder(store.all(), order);
+  }
+
   private static void assertOrder(Iterable<Integer> actual, int[] expected) {
 
     int at = 0;

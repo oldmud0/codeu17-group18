@@ -67,6 +67,31 @@ public final class Store<KEY, VALUE> implements StoreAccessor<KEY, VALUE> {
     }
   }
 
+  /**
+   * Unlinks the key from the linked hash map of the store.
+   * 
+   * <p>Before: <code>A -> B -> C</code>
+   * <p>After:  <code>A -> C</code>
+   * 
+   * @param key  the key to be removed
+   * @return the removed key's first found value (as found in the index),
+   * or null if the key was not found 
+   */
+  public VALUE remove(KEY key) {
+    StoreLink<KEY, VALUE> target = index.get(key);
+    if (target == null) return null;
+    for(StoreLink<KEY, VALUE> current = rootLink; current != null && current.next != null; current = current.next) {
+      // Find the key that is previous to our target
+      if (comparator.compare(current.next.key, target.key) == 0) {
+        // Now set that previous key to two steps ahead of the found key (i.e. jump over our target)
+        // This can be null, but there is no need to check for that - it'll just assign null by itself
+        current.next = current.next.next;
+      }
+    }
+    index.remove(key);
+    return target.value;
+  }
+
   @Override
   public VALUE first(KEY key) {
     final StoreLink<KEY, VALUE> link = index.get(key);

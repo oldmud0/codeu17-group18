@@ -483,6 +483,8 @@ public final class Chat {
         System.out.println("  m-list");
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
+        System.out.println("  m-delete <id>");
+        System.out.println("    Delete a message from the current conversation.");
         System.out
             .println("    Add a new message to the current conversation as the current user.");
         System.out.println("  c-set-access <name> <none|member|owner>");
@@ -575,7 +577,7 @@ public final class Chat {
             System.out.println("ERROR: Message ID cannot be null.");
           }
         } catch (SecurityViolationException e) {
-          System.out.println("You are not allowed to add messages to this conversation.");
+          System.out.println("You are not allowed to delete messages in this conversation.");
         } catch (IOException | IndexOutOfBoundsException e) {
           System.out.println("Message ID could not be parsed.");
         }

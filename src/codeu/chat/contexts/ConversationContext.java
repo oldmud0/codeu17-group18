@@ -84,7 +84,7 @@ public class ConversationContext {
   }
   
   public void remove(Uuid messageId) throws SecurityViolationException {
-	  controller.deleteMessage(conversation.id, messageId, user.id);
+	  controller.deleteMessage(conversation.id, messageId);
   }
   
   private ConversationPayload getUpdated() {

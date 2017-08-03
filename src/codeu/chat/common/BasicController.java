@@ -69,5 +69,5 @@ public interface BasicController {
   void setConversationExplicitPermissions(Uuid conversationId, Uuid invokerId, Uuid targetId, int flags)
       throws SecurityViolationException;
   
-  void deleteMessage (Uuid conversationId, Uuid messageId, Uuid invokerId) throws SecurityViolationException;
+  void deleteMessage(Uuid conversationId, Uuid messageId) throws SecurityViolationException;
 }

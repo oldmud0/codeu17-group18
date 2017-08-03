@@ -14,8 +14,6 @@
 
 package codeu.chat.server;
 
-import java.util.Collection;
-
 import codeu.chat.common.BasicController;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
@@ -28,6 +26,7 @@ import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Logger;
 import codeu.chat.util.Time;
 import codeu.chat.util.Uuid;
+import codeu.chat.util.store.StoreAccessor;
 
 public final class Controller implements RawController, BasicController {
 
@@ -161,8 +160,46 @@ public final class Controller implements RawController, BasicController {
   }
   
   @Override
-  public void deleteMessage (Uuid conversationId, Uuid messageId, Uuid invokerId) throws SecurityViolationException {
-	  
+  public void deleteMessage(Uuid conversationId, Uuid messageId) throws SecurityViolationException {
+    ConversationPayload messages = model.conversationPayloadById().first(conversationId);
+    StoreAccessor<Uuid, Message> accessor = model.messageById();
+
+    // Check if we are deleting the first message
+    if (messageId.equals(messages.firstMessage)) {
+      messages.firstMessage = accessor.first(messageId).next;
+      model.remove(accessor.first(messageId));
+
+      // What if it is the first and the last message?
+      // Then there are no more messages in the conversation.
+      if (messageId.equals(messages.lastMessage)) {
+        messages.lastMessage = Uuid.NULL;
+      }
+      return;
+    }
+
+    for (Message msg = accessor.first(messages.firstMessage); msg.next != null; msg = accessor.first(msg.next)) {
+      // Find the message previous to the message we want to remove
+      Message next = accessor.first(msg.next);
+      if (next.id.equals(messageId)) {
+        // next is our target message, in message form
+        // Now relink our current msg so that it hops over the message we are to remove
+        msg.next = next.next;
+
+        // If there is a message after the message to delete, set its previous to the
+        // current message
+        if (!next.next.equals(Uuid.NULL)) {
+          accessor.first(next.next).previous = msg.id;
+        }
+
+        // Check if deleted message was the last message
+        if (messageId.equals(messages.lastMessage)) {
+          messages.lastMessage = msg.id;
+        }
+
+        model.remove(next);
+        return;
+      }
+    }
   }
 
   @Override
