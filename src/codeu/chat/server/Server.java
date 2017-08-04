@@ -391,7 +391,40 @@ public final class Server {
         }
       }
     });
-
+    this.commands.put(NetworkCode.DELETE_MESSAGE_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+          final Uuid convoId = Uuid.SERIALIZER.read(in);
+          final ConversationHeader convoHeader = view.findConversation(convoId);
+          final Uuid messageId = Uuid.SERIALIZER.read(in);
+          final Uuid invokerId = Uuid.SERIALIZER.read(in);
+          final User invokerUser = view.findUser(invokerId);
+          ConversationContext invokerContext = new ConversationContext(invokerUser, convoHeader, view, controller);
+          try {
+              invokerContext.remove(messageId);
+              Serializers.INTEGER.write(out, NetworkCode.DELETE_MESSAGE_RESPONSE);
+            } catch (SecurityViolationException e) {
+              LOG.error(e, "Security violation occured by user: " + invokerUser.name);
+              Serializers.INTEGER.write(out, NetworkCode.ERR_SECURITY_VIOLATION);
+            }
+      }
+    });
+    this.commands.put(NetworkCode.DELETE_CONVERSATION_REQUEST, new Command() {
+      @Override
+      public void onMessage(InputStream in, OutputStream out) throws IOException {
+          final Uuid convoId = Uuid.SERIALIZER.read(in);
+          final Uuid invokerId = Uuid.SERIALIZER.read(in);
+          final User invokerUser = view.findUser(invokerId);
+          UserContext invokerContext = new UserContext(invokerUser, view, controller);
+          try {
+              invokerContext.deleteConversation(convoId);
+              Serializers.INTEGER.write(out, NetworkCode.DELETE_CONVERSATION_RESPONSE);
+            } catch (SecurityViolationException e) {
+              LOG.error(e, "Security violation occured by user: " + invokerUser.name);
+              Serializers.INTEGER.write(out, NetworkCode.ERR_SECURITY_VIOLATION);
+            }
+      }
+    });
     this.timeline.scheduleNow(new Runnable() {
       @Override
       public void run() {

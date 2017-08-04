@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//    http://www.apache.org/licenses/LICENSE-2.0
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,33 +14,22 @@
 
 package codeu.chat.client.commandline;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
 import java.util.Stack;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.io.IOException;
-import java.util.Iterator;
 
+import codeu.chat.client.core.UserContext;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
 import codeu.chat.contexts.Context;
 import codeu.chat.contexts.ConversationContext;
 import codeu.chat.contexts.MessageContext;
-import codeu.chat.client.core.UserContext;
+import codeu.chat.security.ConversationSecurityPresets;
 import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Tokenizer;
-import codeu.chat.common.VersionInfo;
 import codeu.chat.util.Uuid;
-import codeu.chat.util.InterestInfo;
-import codeu.chat.security.ConversationSecurityPresets;
 
 public final class Chat {
 
@@ -71,7 +60,8 @@ public final class Chat {
     for (String token = tokenizer.next(); token != null; token = tokenizer.next()) {
       args.add(token);
     }
-    if(args.isEmpty()) return true;
+    if (args.isEmpty())
+      return true;
     final String command = args.remove(0);
 
     // Because "exit" and "back" are applicable to every panel, handle
@@ -95,7 +85,8 @@ public final class Chat {
     }
 
     // If we get to here it means that the command was not correctly handled
-    // so we should let the user know. Still return true as we want to continue
+    // so we should let the user know. Still return true as we want to
+    // continue
     // processing future commands.
     System.out.println("ERROR: Unsupported command");
     return true;
@@ -103,12 +94,15 @@ public final class Chat {
 
   // CREATE ROOT PANEL
   //
-  // Create a panel for the root of the application. Root in this context means
+  // Create a panel for the root of the application. Root in this context
+  // means
   // the first panel and the only panel that should always be at the bottom of
   // the panels stack.
   //
-  // The root panel is for commands that require no specific contextual information.
-  // This is before a user has signed in. Most commands handled by the root panel
+  // The root panel is for commands that require no specific contextual
+  // information.
+  // This is before a user has signed in. Most commands handled by the root
+  // panel
   // will be user selection focused.
   //
   private Panel createRootPanel(final Context context) {
@@ -117,7 +111,8 @@ public final class Chat {
 
     // HELP
     //
-    // Add a command to print a list of all commands and their description when
+    // Add a command to print a list of all commands and their description
+    // when
     // the user for "help" while on the root panel.
     //
     panel.register("help", new Panel.Command() {
@@ -139,17 +134,15 @@ public final class Chat {
 
     // U-LIST (user list)
     //
-    // Add a command to print all users registered on the server when the user
+    // Add a command to print all users registered on the server when the
+    // user
     // enters "u-list" while on the root panel.
     //
     panel.register("u-list", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
         for (final codeu.chat.contexts.UserContext user : context.allUsers()) {
-          System.out.format(
-              "USER %s (UUID:%s)\n",
-              user.user.name,
-              user.user.id);
+          System.out.format("USER %s (UUID:%s)\n", user.user.name, user.user.id);
         }
       }
     });
@@ -195,7 +188,8 @@ public final class Chat {
       }
 
       // Find the first user with the given name and return a user context
-      // for that user. If no user is found, the function will return null.
+      // for that user. If no user is found, the function will return
+      // null.
       private UserContext findUser(String name) {
         for (final codeu.chat.contexts.UserContext user : context.allUsers()) {
           if (user.user.name.equals(name)) {
@@ -206,7 +200,6 @@ public final class Chat {
       }
     });
 
-
     // VERSION (server version)
     //
     // Print the server's version.
@@ -214,20 +207,20 @@ public final class Chat {
     panel.register("version", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
-          final VersionInfo version = context.getVersion();
-          if (version == null) {
-              System.out.println("ERROR: No version returned");
-          } else {
-              System.out.format("Server version: %s\n", version.toString());
-          }
+        final VersionInfo version = context.getVersion();
+        if (version == null) {
+          System.out.println("ERROR: No version returned");
+        } else {
+          System.out.format("Server version: %s\n", version.toString());
         }
-      });
+      }
+    });
 
     panel.register("serverinfo", new Panel.Command() {
       @Override
       public void invoke(List<String> args) {
         final ServerInfo info = context.getInfo();
-        if(info == null) {
+        if (info == null) {
           System.out.println("ERROR: No info returned");
         } else {
           System.out.format("Server info: %s\n", info.toString());
@@ -240,7 +233,6 @@ public final class Chat {
     context2 = context;
     return panel;
   }
-
 
   private Panel createUserPanel(final UserContext user) {
 
@@ -258,21 +250,28 @@ public final class Chat {
         System.out.println("  c-list");
         System.out.println("    List all conversations that the current user can interact with.");
         System.out.println("  c-add <title>");
-        System.out.println("    Add a new conversation with the given title and join it as the current user.");
+        System.out.println(
+            "    Add a new conversation with the given title and join it as the current user.");
+        System.out.println("  c-delete <id>");
+        System.out.println("    Delete a conversation.");
         System.out.println("  c-add-userInterest <name>");
         System.out.println("    Add this user with the given name to user's interest system.");
         System.out.println("  c-add-convoInterest <title>");
-        System.out.println("    Add this conversation with the given title to user's interest system.");
+        System.out
+            .println("    Add this conversation with the given title to user's interest system.");
         System.out.println("  c-remove-userInterest <name>");
         System.out.println("    Remove this user with the given name from user's interest system.");
         System.out.println("  c-remove-convoInterest <title>");
-        System.out.println("    Remove this conversation with the given title from user's interest system.");
+        System.out.println(
+            "    Remove this conversation with the given title from user's interest system.");
         System.out.println("  c-join <title>");
         System.out.println("    Join the conversation as the current user.");
         System.out.println("  c-convo-statusUpdate");
-        System.out.println("      Prints how many messages have been added to interested conversations since last update.");
+        System.out.println(
+            "      Prints how many messages have been added to interested conversations since last update.");
         System.out.println("  c-user-statusUpdate");
-        System.out.println("      Prints all conversations that have been created or modified for each interested user.");
+        System.out.println(
+            "      Prints all conversations that have been created or modified for each interested user.");
         System.out.println("  info");
         System.out.println("    Display all info for the current user");
         System.out.println("  back");
@@ -291,9 +290,7 @@ public final class Chat {
       @Override
       public void invoke(List<String> args) {
         for (final ConversationContext conversation : user.conversations()) {
-          System.out.format(
-              "CONVERSATION %s (UUID:%s)\n",
-              conversation.conversation.title,
+          System.out.format("CONVERSATION %s (UUID:%s)\n", conversation.conversation.title,
               conversation.conversation.id);
         }
       }
@@ -305,10 +302,10 @@ public final class Chat {
         final String name = args.remove(0);
 
         if (name.length() > 0) {
-          if(user.createUserInterest(name) == null){
+          if (user.createUserInterest(name) == null) {
             System.out.println("ERROR: Failed to create new userInterest");
           } else {
-          System.out.println(user.createUserInterest(name));
+            System.out.println(user.createUserInterest(name));
           }
         }
       }
@@ -318,9 +315,9 @@ public final class Chat {
       @Override
       public void invoke(List<String> args) {
         final String name = args.remove(0);
-        
-        if(name.length() > 0) {
-          if(user.createConvoInterest(name) == null){
+
+        if (name.length() > 0) {
+          if (user.createConvoInterest(name) == null) {
             System.out.println("ERROR: Failed to create new convoInterest");
           } else {
             System.out.println(user.createConvoInterest(name));
@@ -334,10 +331,10 @@ public final class Chat {
       public void invoke(List<String> args) {
         final String name = args.remove(0);
         if (name.length() > 0) {
-          if(user.removeUserInterest(name) == null){
+          if (user.removeUserInterest(name) == null) {
             System.out.println("ERROR: Failed to remove userInterest");
           } else {
-          System.out.println(user.removeUserInterest(name));
+            System.out.println(user.removeUserInterest(name));
           }
         }
       }
@@ -348,10 +345,10 @@ public final class Chat {
       public void invoke(List<String> args) {
         final String name = args.remove(0);
         if (name.length() > 0) {
-          if(user.removeConvoInterest(name) == null){
+          if (user.removeConvoInterest(name) == null) {
             System.out.println("ERROR: Failed to remove userInterest");
           } else {
-          System.out.println(user.removeConvoInterest(name));
+            System.out.println(user.removeConvoInterest(name));
           }
         }
       }
@@ -359,7 +356,8 @@ public final class Chat {
 
     // C-ADD (add conversation)
     //
-    // Add a command that will create and join a new conversation when the user
+    // Add a command that will create and join a new conversation when the
+    // user
     // enters "c-add" while on the user panel.
     //
     panel.register("c-add", new Panel.Command() {
@@ -379,7 +377,41 @@ public final class Chat {
       }
     });
 
-    //C-JOIN (join conversation)
+    // C-DELETE (delete conversation)
+    //
+    // Add a command that will delete a conversation when the user
+    // enters "c-delete" on the user panel and specifies the UUID of the
+    // conversation as a parameter.
+    panel.register("c-delete", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        try {
+          final Uuid conversationId = Uuid.parse(args.remove(0));
+          ConversationContext targetConversation = null;
+          if (conversationId != null) {
+            // Find the conversation
+            for (ConversationContext convo : user.conversations()) {
+              if (convo.conversation.id.equals(conversationId)) {
+                targetConversation = convo;
+              }
+            }
+            if (targetConversation != null) {
+              user.deleteConversation(targetConversation.conversation.id);
+            } else {
+              System.out.println("ERROR: Conversation of specified ID was not found.");
+            }
+          } else {
+            System.out.println("ERROR: Conversation ID cannot be null.");
+          }
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to delete this conversation.");
+        } catch (IOException | IndexOutOfBoundsException e) {
+          System.out.println("Conversation ID could not be parsed.");
+        }
+      }
+    });
+
+    // C-JOIN (join conversation)
 
     // Add a command that will joing a conversation when the user enters
     // "c-join" while on the user panel.
@@ -399,7 +431,8 @@ public final class Chat {
         }
       }
 
-      // Find the first conversation with the given name and return its context.
+      // Find the first conversation with the given name and return its
+      // context.
       // If no conversation has the given name, this will return null.
       private ConversationContext find(String title) {
         for (final ConversationContext conversation : user.conversations()) {
@@ -474,9 +507,13 @@ public final class Chat {
         System.out.println("  m-list");
         System.out.println("    List all messages in the current conversation.");
         System.out.println("  m-add <message>");
-        System.out.println("    Add a new message to the current conversation as the current user.");
+        System.out.println("  m-delete <id>");
+        System.out.println("    Delete a message from the current conversation.");
+        System.out
+            .println("    Add a new message to the current conversation as the current user.");
         System.out.println("  c-set-access <name> <none|member|owner>");
-        System.out.println("    Set the access level of the current conversation to the specified preset for a user.");
+        System.out.println(
+            "    Set the access level of the current conversation to the specified preset for a user.");
         System.out.println("  info");
         System.out.println("    Display all info about the current conversation.");
         System.out.println("  back");
@@ -488,7 +525,8 @@ public final class Chat {
 
     // M-LIST (list messages)
     //
-    // Add a command to print all messages in the current conversation when the
+    // Add a command to print all messages in the current conversation when
+    // the
     // user enters "m-list" while on the conversation panel.
     //
     panel.register("m-list", new Panel.Command() {
@@ -496,12 +534,12 @@ public final class Chat {
       public void invoke(List<String> args) {
         try {
           System.out.println("--- start of conversation ---");
-          for (MessageContext message = conversation.firstMessage();
-                              message != null;
-                              message = message.next()) {
+          for (MessageContext message = conversation.firstMessage(); message != null; message =
+              message.next()) {
             System.out.println();
             System.out.format("USER : %s\n", message.message.author);
             System.out.format("SENT : %s\n", message.message.creation);
+            System.out.format("ID : %s\n", message.message.id);
             System.out.println();
             System.out.println(message.message.content);
             System.out.println();
@@ -515,7 +553,8 @@ public final class Chat {
 
     // M-ADD (add message)
     //
-    // Add a command to add a new message to the current conversation when the
+    // Add a command to add a new message to the current conversation when
+    // the
     // user enters "m-add" while on the conversation panel.
     //
     panel.register("m-add", new Panel.Command() {
@@ -534,6 +573,40 @@ public final class Chat {
       }
     });
 
+    // M-DELETE
+    //
+    // Add a command to delete a message in the current conversation by
+    // taking in the Uuid of a message.
+    //
+    panel.register("m-delete", new Panel.Command() {
+      @Override
+      public void invoke(List<String> args) {
+        try {
+          final Uuid messageID = Uuid.parse(args.remove(0));
+          User currentUser = conversation.user;
+          MessageContext targetMessage = null;
+          if (messageID != null) {
+            for (MessageContext message = conversation.firstMessage(); message != null; message =
+                message.next()) {
+              if (message.message.id.equals(messageID)) {
+                targetMessage = message;
+              }
+            }
+            if (targetMessage != null) {
+              conversation.remove(targetMessage.message.id);
+            } else {
+              System.out.println("ERROR: No message of ID found in conversation.");
+            }
+          } else {
+            System.out.println("ERROR: Message ID cannot be null.");
+          }
+        } catch (SecurityViolationException e) {
+          System.out.println("You are not allowed to delete messages in this conversation.");
+        } catch (IOException | IndexOutOfBoundsException e) {
+          System.out.println("Message ID could not be parsed.");
+        }
+      }
+    });
     // C-SET-ACCESS (set access for user)
     //
     // Add a command that will set access for another user in a conversation
@@ -544,32 +617,32 @@ public final class Chat {
       @Override
       public void invoke(List<String> args) {
         try {
-            final String userSearched = args.remove(0);
-            final String preset = (args.remove(0)).toLowerCase();
-            User targetUser = null;
-            
-            for (final codeu.chat.contexts.UserContext user : context2.allUsers()) {
-              if (user.user.name.equalsIgnoreCase(userSearched)) {
-                targetUser = user.user;
-              }
+          final String userSearched = args.remove(0);
+          final String preset = (args.remove(0)).toLowerCase();
+          User targetUser = null;
+
+          for (final codeu.chat.contexts.UserContext user : context2.allUsers()) {
+            if (user.user.name.equalsIgnoreCase(userSearched)) {
+              targetUser = user.user;
             }
-                
-            int flags;
-            if(preset.equals("owner")) {
-              flags = ConversationSecurityPresets.OWNER;
-            } else if (preset.equals("member")) {
-              flags = ConversationSecurityPresets.MEMBER;
-            } else if (preset.equals("none")) {
-              flags = ConversationSecurityPresets.NONE;
-            } else {
-              System.out.println("ERROR: Please enter a valid security preset.");
-              return;
-            }
-            if (targetUser != null) {
-              conversation.setSecurityFlags(targetUser.id, flags);
-            } else {
-              System.out.println("ERROR: Missing <name>");
-            }
+          }
+
+          int flags;
+          if (preset.equals("owner")) {
+            flags = ConversationSecurityPresets.OWNER;
+          } else if (preset.equals("member")) {
+            flags = ConversationSecurityPresets.MEMBER;
+          } else if (preset.equals("none")) {
+            flags = ConversationSecurityPresets.NONE;
+          } else {
+            System.out.println("ERROR: Please enter a valid security preset.");
+            return;
+          }
+          if (targetUser != null) {
+            conversation.setSecurityFlags(targetUser.id, flags);
+          } else {
+            System.out.println("ERROR: Missing <name>");
+          }
         } catch (IndexOutOfBoundsException e) {
           System.out.println("ERROR: Unable to find an argument.");
         } catch (SecurityViolationException e) {
@@ -580,7 +653,8 @@ public final class Chat {
 
     // INFO
     //
-    // Add a command to print info about the current conversation when the user
+    // Add a command to print info about the current conversation when the
+    // user
     // enters "info" while on the conversation panel.
     //
     panel.register("info", new Panel.Command() {

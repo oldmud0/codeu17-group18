@@ -69,4 +69,13 @@ public interface BasicController {
   void setConversationExplicitPermissions(Uuid conversationId, Uuid invokerId, Uuid targetId, int flags)
       throws SecurityViolationException;
 
+  void deleteMessage(Uuid conversationId, Uuid messageId) throws SecurityViolationException;
+
+  // DELETE CONVERSATION
+  //
+  //   Delete a conversation and all of its contents.
+  //   While having the same message in different conversations might be technically viable,
+  //   this approach assumes that a message only resides in one conversation at a time.
+  //   Thus, it will not try to preserve messages that might be in another conversation.
+  void deleteConversation(Uuid conversationId) throws SecurityViolationException;
 }

@@ -26,8 +26,8 @@ import codeu.chat.common.OmniView;
 import codeu.chat.common.SinglesView;
 import codeu.chat.common.User;
 import codeu.chat.common.VersionInfo;
-import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Logger;
+import codeu.chat.util.ServerInfo;
 import codeu.chat.util.Uuid;
 import codeu.chat.util.store.StoreAccessor;
 

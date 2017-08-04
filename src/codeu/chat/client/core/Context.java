@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import codeu.chat.common.User;
-import codeu.chat.client.core.UserContext;
 
 public class Context extends codeu.chat.contexts.Context {
 

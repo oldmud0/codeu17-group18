@@ -15,14 +15,13 @@
 
 package codeu.chat;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 
 import codeu.chat.common.Relay;
 import codeu.chat.common.Secret;
 import codeu.chat.server.NoOpRelay;
 import codeu.chat.server.PersistenceReader;
-import codeu.chat.server.PersistenceWriter;
 import codeu.chat.server.RemoteRelay;
 import codeu.chat.server.Server;
 import codeu.chat.util.Logger;

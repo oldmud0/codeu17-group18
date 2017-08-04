@@ -21,6 +21,7 @@ import codeu.chat.common.BasicController;
 import codeu.chat.common.BasicView;
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.User;
+import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Uuid;
 
 public class UserContext {
@@ -77,5 +78,8 @@ public class UserContext {
   public String removeConvoInterest(String name) {
     return controller.deleteConvoInterest(name, user.id);
   }
-  
+
+  public void deleteConversation(Uuid conversationId) throws SecurityViolationException {
+    controller.deleteConversation(conversationId);
+  }
 }

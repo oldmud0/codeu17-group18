@@ -82,7 +82,11 @@ public class ConversationContext {
   public void setSecurityFlags(Uuid id, int flags) throws SecurityViolationException {
     controller.setConversationExplicitPermissions(conversation.id, user.id, id, flags);
   }
-
+  
+  public void remove(Uuid messageId) throws SecurityViolationException {
+	  controller.deleteMessage(conversation.id, messageId);
+  }
+  
   private ConversationPayload getUpdated() {
     final Collection<Uuid> ids = Arrays.asList(conversation.id);
     final Iterator<ConversationPayload> payloads = view.getConversationPayloads(ids).iterator();

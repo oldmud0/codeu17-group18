@@ -18,7 +18,6 @@ import java.util.Comparator;
 
 import codeu.chat.common.ConversationHeader;
 import codeu.chat.common.ConversationPayload;
-import codeu.chat.common.LinearUuidGenerator;
 import codeu.chat.common.Message;
 import codeu.chat.common.User;
 import codeu.chat.util.Time;
@@ -116,6 +115,19 @@ public final class Model {
     messageById.insert(message.id, message);
     messageByTime.insert(message.creation, message);
     messageByText.insert(message.content, message);
+  }
+
+  public void remove(Message message) {
+    messageById.remove(message.id);
+    messageByTime.remove(message.creation);
+    messageByText.remove(message.content);
+  }
+
+  public void remove(ConversationHeader conversation) {
+    conversationById.remove(conversation.id);
+    conversationByTime.remove(conversation.creation);
+    conversationByText.remove(conversation.title);
+    conversationPayloadById.remove(conversation.id);
   }
 
   public StoreAccessor<Uuid, Message> messageById() {
