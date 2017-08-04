@@ -48,16 +48,14 @@ public class ConversationContext extends codeu.chat.contexts.ConversationContext
     throw new SecurityViolationException();
   }
 
-@Override
-public void remove(Uuid messageId) throws SecurityViolationException {
-	if (conversation.security.hasFlags(user.id, ConversationSecurityFlags.DELETE_MESSAGES)) {
-		super.remove(messageId);
-		return;
-	}
-	throw new SecurityViolationException();
-	
-}
-  
-  
+  @Override
+  public void remove(Uuid messageId) throws SecurityViolationException {
+    if (conversation.security.hasFlags(user.id, ConversationSecurityFlags.DELETE_MESSAGES)) {
+      super.remove(messageId);
+      return;
+    }
+    throw new SecurityViolationException();
+
+  }
 
 }

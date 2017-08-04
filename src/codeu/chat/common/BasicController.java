@@ -68,7 +68,7 @@ public interface BasicController {
   //   that is emitted when modifying the security descriptor.
   void setConversationExplicitPermissions(Uuid conversationId, Uuid invokerId, Uuid targetId, int flags)
       throws SecurityViolationException;
-  
+
   void deleteMessage(Uuid conversationId, Uuid messageId) throws SecurityViolationException;
 
   // DELETE CONVERSATION

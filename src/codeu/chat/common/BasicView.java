@@ -62,7 +62,5 @@ public interface BasicView {
 
   String getAllConvosFromServer(Uuid signedInId);
   String getNumMessagesFromServer(Uuid signedInId);
-  
-  
 
 }
