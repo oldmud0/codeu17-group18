@@ -124,6 +124,13 @@ public final class Model {
     messageByText.remove(message.content);
   }
 
+  public void remove(ConversationHeader conversation) {
+    conversationById.remove(conversation.id);
+    conversationByTime.remove(conversation.creation);
+    conversationByText.remove(conversation.title);
+    conversationPayloadById.remove(conversation.id);
+  }
+
   public StoreAccessor<Uuid, Message> messageById() {
     return messageById;
   }

@@ -144,21 +144,21 @@ public final class Controller implements RawController, BasicController {
     String str = "";
     return str;
   }
-  
+
   @Override
   public String deleteConvoInterest(String name, Uuid signedInId) {
     String str = "";
     return str;
   }
-  
+
   @Override
   public void setConversationExplicitPermissions(Uuid conversationId, Uuid invokerId, Uuid targetId, int flags)
   		throws SecurityViolationException {
   	ConversationHeader header = model.conversationById().first(conversationId);
   	ConversationSecurityDescriptor descrip = header.security;
-  	descrip.setPermissions(invokerId, targetId, flags);	
+  	descrip.setPermissions(invokerId, targetId, flags);
   }
-  
+
   @Override
   public void deleteMessage(Uuid conversationId, Uuid messageId) throws SecurityViolationException {
     ConversationPayload messages = model.conversationPayloadById().first(conversationId);
@@ -201,10 +201,16 @@ public final class Controller implements RawController, BasicController {
       }
     }
   }
-  
+
   @Override
   public void deleteConversation(Uuid conversationId) throws SecurityViolationException {
-    
+    StoreAccessor<Uuid, ConversationHeader> accessor = model.conversationById();
+    ConversationPayload messages = model.conversationPayloadById().first(conversationId);
+    model.remove(accessor.first(conversationId));
+    StoreAccessor<Uuid, Message> messageAccessor = model.messageById();
+    for (Message msg = messageAccessor.first(messages.firstMessage); msg.next != null; msg = messageAccessor.first(msg.next)) {
+      model.remove(msg);
+    }
   }
 
   @Override
