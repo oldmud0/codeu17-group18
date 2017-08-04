@@ -19,7 +19,6 @@ import java.util.Iterator;
 
 import codeu.chat.common.BasicView;
 import codeu.chat.common.Message;
-import codeu.chat.security.SecurityViolationException;
 import codeu.chat.util.Uuid;
 
 public class MessageContext {
