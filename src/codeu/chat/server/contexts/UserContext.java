@@ -78,9 +78,9 @@ public class UserContext extends codeu.chat.contexts.UserContext {
         foundConversation = convo;
       }
     }
-    // HACK: I want to throw an IllegalArgumentException but without changing the method signature
-    if (foundConversation == null) return;
-    if (foundConversation.conversation.security.hasFlags(user.id, ConversationSecurityFlags.DELETE_MESSAGES)) {
+    if (foundConversation != null
+        && foundConversation.conversation.security.hasFlags(user.id,
+            ConversationSecurityFlags.DELETE_MESSAGES)) {
       super.deleteConversation(conversationId);
       return;
     }
